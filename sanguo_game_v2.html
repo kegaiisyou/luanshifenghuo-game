@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三国：逐鹿天下</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%); color: #fff; padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        
+        .header { background: linear-gradient(135deg, #c0392b, #8e44ad); padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .header h1 { margin: 0; font-size: 1.4rem; letter-spacing: 2px; }
+        
+        .status { display: flex; justify-content: space-around; background: #16213e; padding: 12px; border-radius: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 8px; }
+        .status-item { text-align: center; min-width: 60px; }
+        .status-label { font-size: 0.75rem; color: #bdc3c7; }
+        .status-value { color: #e6b800; font-weight: bold; font-size: 1.1rem; }
+        
+        .location { background: #16213e; padding: 12px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #e6b800; }
+        .location-name { color: #e6b800; font-weight: bold; font-size: 1.1rem; }
+        .location-desc { color: #bdc3c7; margin-top: 5px; }
+        
+        #gameLog { background: #16213e; padding: 15px; height: 320px; overflow-y: auto; border-radius: 10px; margin-bottom: 15px; border: 1px solid #34495e; }
+        #gameLog::-webkit-scrollbar { width: 5px; }
+        #gameLog::-webkit-scrollbar-thumb { background: #e6b800; border-radius: 3px; }
+        
+        .message { margin-bottom: 12px; line-height: 1.7; font-size: 0.95rem; }
+        .system { color: #3498db; }
+        .narrative { color: #ecf0f1; }
+        .success { color: #27ae60; }
+        .combat { color: #e74c3c; }
+        .gold { color: #f1c40f; }
+        
+        .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+        button { padding: 12px 8px; background: #0f3460; color: #fff; border: 1px solid #34495e; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+        button:hover { background: #1a4a7a; border-color: #e6b800; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+        button.primary { background: linear-gradient(135deg, #c0392b, #922b21); }
+        button.gold { background: linear-gradient(135deg, #f1c40f, #d4ac0d); color: #1a1a2e; }
+        
+        .input-area { display: flex; gap: 10px; }
+        #commandInput { flex: 1; padding: 12px; background: #1a1a2e; color: #fff; border: 1px solid #34495e; border-radius: 8px; font-size: 1rem; }
+        #commandInput:focus { outline: none; border-color: #e6b800; }
+        #sendBtn { background: #e6b800; color: #1a1a2e; font-weight: bold; padding: 12px 20px; }
+        
+        .combat-panel { background: #1a1a2e; padding: 15px; border-radius: 10px; margin: 10px 0; border: 2px solid #e74c3c; }
+        .enemy-name { color: #e74c3c; font-size: 1.2rem; text-align: center; margin-bottom: 10px; }
+        .hp-bar { background: #34495e; height: 20px; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .hp-fill { background: linear-gradient(90deg, #e74c3c, #c0392b); height: 100%; transition: width 0.3s; }
+        .combat-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        
+        @media (max-width: 400px) {
+            .controls { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏯 三国：逐鹿天下</h1>
+    </div>
+    
+    <div class="status">
+        <div class="status-item"><div class="status-label">等级</div><div class="status-value" id="level">1</div></div>
+        <div class="status-item"><div class="status-label">兵力</div><div class="status-value" id="army">1000</div></div>
+        <div class="status-item"><div class="status-label">攻击</div><div class="status-value" id="attack">10</div></div>
+        <div class="status-item"><div class="status-label">防御</div><div class="status-value" id="defense">5</div></div>
+        <div class="status-item"><div class="status-label">金币</div><div class="status-value" id="gold">500</div></div>
+        <div class="status-item"><div class="status-label">粮草</div><div class="status-value" id="food">500</div></div>
+    </div>
+    
+    <div class="location">
+        <div class="location-name" id="locationName">洛阳</div>
+        <div class="location-desc" id="locationDesc">东汉都城，天下中心</div>
+    </div>
+    
+    <div id="gameLog"></div>
+    
+    <div class="controls">
+        <button onclick="showStats()">📊 状态</button>
+        <button onclick="showMap()">🗺️ 地图</button>
+        <button onclick="showBag()">🎒 背包</button>
+        <button onclick="showOfficers()">👥 武将</button>
+        <button onclick="showRecruit()">⚔️ 招募</button>
+        <button onclick="showHelp()">❓ 帮助</button>
+        <button onclick="saveGame()">💾 存档</button>
+        <button onclick="loadGame()">📂 读档</button>
+    </div>
+    
+    <div class="input-area">
+        <input type="text" id="commandInput" placeholder="输入指令..." onkeypress="if(event.key==='Enter')sendCommand()">
+        <button id="sendBtn" onclick="sendCommand()">发送</button>
+    </div>
+
+    <script>
+        // ========== 游戏数据 ==========
+        
+        const CITIES = {
+            "洛阳": { name: "洛阳", owner: "东汉", defense: 5000, garrison: 3000, economy: 100, adjacent: ["许昌", "长安", "南阳"], desc: "东汉都城，天下中心" },
+            "许昌": { name: "许昌", owner: "曹操", defense: 4000, garrison: 2500, economy: 80, adjacent: ["洛阳", "寿春", "新野"], desc: "曹操根据地" },
+            "长安": { name: "长安", owner: "东汉", defense: 4500, garrison: 2000, economy: 70, adjacent: ["洛阳", "汉中"], desc: "西汉故都" },
+            "南阳": { name: "南阳", owner: "东汉", defense: 3000, garrison: 1500, economy: 60, adjacent: ["洛阳", "襄阳", "新野"], desc: "诸葛亮躬耕之地" },
+            "襄阳": { name: "襄阳", owner: "刘表", defense: 3500, garrison: 2000, economy: 65, adjacent: ["南阳", "江陵"], desc: "荆州重镇" },
+            "江陵": { name: "江陵", owner: "刘表", defense: 2500, garrison: 1200, economy: 50, adjacent: ["襄阳"], desc: "长江要冲" },
+            "寿春": { name: "寿春", owner: "袁术", defense: 3000, garrison: 1800, economy: 55, adjacent: ["许昌", "建业"], desc: "江淮门户" },
+            "建业": { name: "建业", owner: "孙策", defense: 3500, garrison: 2000, economy: 60, adjacent: ["寿春"], desc: "江东根基" },
+            "成都": { name: "成都", owner: "刘备", defense: 4000, garrison: 2200, economy: 70, adjacent: ["汉中"], desc: "天府之国" },
+            "汉中": { name: "汉中", owner: "张鲁", defense: 2500, garrison: 1500, economy: 45, adjacent: ["长安", "成都"], desc: "巴蜀门户" },
+            "新野": { name: "新野", owner: "东汉", defense: 2000, garrison: 800, economy: 40, adjacent: ["许昌", "南阳"], desc: "弹丸小城" }
+        };
+
+        const OFFICERS_AVAILABLE = [
+            { name: "关羽", rank: "S", attack: 30, defense: 20, skill: "青龙斩", cost: 1000, desc: "蜀汉五虎上将" },
+            { name: "张飞", rank: "S", attack: 28, defense: 18, skill: "蛇矛击", cost: 1000, desc: "蜀汉五虎上将" },
+            { name: "赵云", rank: "S", attack: 32, defense: 15, skill: "龙胆枪", cost: 1200, desc: "常山赵子龙" },
+            { name: "诸葛亮", rank: "SS", attack: 25, defense: 10, skill: "八卦阵", cost: 2000, desc: "卧龙先生" },
+            { name: "曹操", rank: "SS", attack: 22, defense: 25, skill: "挟天子", cost: 2500, desc: "魏武帝" },
+            { name: "周瑜", rank: "S", attack: 26, defense: 15, skill: "火攻", cost: 1500, desc: "江东周郎" },
+            { name: "张辽", rank: "S", attack: 25, defense: 20, skill: "突袭", cost: 1200, desc: "曹魏名将" },
+            { name: "徐晃", rank: "A", attack: 22, defense: 18, skill: "斧击", cost: 700, desc: "曹魏五良将" },
+            { name: "黄忠", rank: "S", attack: 28, defense: 12, skill: "百步穿杨", cost: 1000, desc: "蜀汉五虎将" },
+            { name: "吕蒙", rank: "A", attack: 20, defense: 18, skill: "白衣渡", cost: 800, desc: "吴下阿蒙" }
+        ];
+
+        const ITEMS = {
+            "武器": { price: 200, effect: "+5攻击" },
+            "防具": { price: 180, effect: "+5防御" },
+            "战马": { price: 150, effect: "+3攻击" },
+            "兵力": { price: 50, effect: "+200兵力" },
+            "粮草": { price: 20, effect: "+100粮草" },
+            "《孙子兵法》": { price: 500, effect: "全技能书" }
+        };
+
+        // ========== 游戏状态 ==========
+        
+        let player = {
+            name: "主公",
+            level: 1, exp: 0, expToLevel: 100,
+            gold: 500, food: 500, army: 1000,
+            attack: 10, defense: 5,
+            location: "洛阳",
+            items: { "黄金": 3, "粮草": 20 },
+            skills: [],
+            officers: []
+        };
+
+        let inCombat = false;
+        let currentEnemy = null;
+
+        // ========== 核心函数 ==========
+        
+        function log(type, text) {
+            const div = document.createElement('div');
+            div.className = 'message ' + type;
+            div.textContent = text;
+            document.getElementById('gameLog').appendChild(div);
+            document.getElementById('gameLog').scrollTop = 9999;
+        }
+
+        function updateStatus() {
+            document.getElementById('level').textContent = player.level;
+            document.getElementById('army').textContent = player.army;
+            document.getElementById('attack').textContent = player.attack;
+            document.getElementById('defense').textContent = player.defense;
+            document.getElementById('gold').textContent = player.gold;
+            document.getElementById('food').textContent = player.food;
+            document.getElementById('locationName').textContent = player.location;
+            document.getElementById('locationDesc').textContent = CITIES[player.location].desc;
+        }
+
+        function sendCommand() {
+            const input = document.getElementById('commandInput');
+            const cmd = input.value.trim();
+            if (!cmd) return;
+            input.value = '';
+            log('system', '> ' + cmd);
+            processCommand(cmd);
+        }
+
+        // ========== 指令处理 ==========
+        
+        function processCommand(cmd) {
+            if (inCombat) { handleCombatCmd(cmd); return; }
+            
+            const action = cmd.split(' ')[0];
+            const target = cmd.substring(action.length).trim();
+            
+            switch(action) {
+                case '帮助': case 'help': showHelp(); break;
+                case '状态': case 'stats': showStats(); break;
+                case '地图': case 'map': showMap(); break;
+                case '背包': case 'bag': showBag(); break;
+                case '武将': case 'officers': showOfficers(); break;
+                case '招募': case 'recruit': showRecruit(); break;
+                case '存档': case 'save': saveGame(); break;
+                case '读档': case 'load': loadGame(); break;
+                case '前往': case 'go': case '移动': moveTo(target); break;
+                case '进攻': case 'attack': startCombat(target); break;
+                case '买': case 'buy': buyItem(target); break;
+                case '卖': case 'sell': sellItem(target); break;
+                case '征兵': recruitSoldiers(target); break;
+                default: log('system', '未知指令，输入"帮助"查看');
+            }
+        }
+
+        // ========== 移动系统 ==========
+        
+        function moveTo(cityName) {
+            if (!cityName) { log('system', '请输入目的地，如：前往 许昌'); return; }
+            const current = CITIES[player.location];
+            
+            if (current.adjacent.includes(cityName)) {
+                if (player.food >= 30) {
+                    player.food -= 30;
+                    player.location = cityName;
+                    log('success', '🚶 前往 ' + cityName);
+                    log('narrative', CITIES[cityName].desc);
+                    log('system', '可前往：' + CITIES[cityName].adjacent.join('、'));
+                    updateStatus();
+                } else {
+                    log('combat', '粮草不足！需要30粮草');
+                }
+            } else {
+                log('system', '无法前往，当前可去：' + current.adjacent.join('、'));
+            }
+        }
+
+        // ========== 战斗系统 ==========
+        
+        function startCombat(cityName) {
+            if (!cityName) { log('system', '请输入要进攻的城市，如：进攻 许昌'); return; }
+            if (cityName === player.location) { log('system', '你已经在' + cityName); return; }
+            
+            const city = CITIES[cityName];
+            if (!city) { log('system', '未找到城市' + cityName); return; }
+            
+            inCombat = true;
+            currentEnemy = {
+                name: cityName,
+                hp: city.garrison,
+                maxHp: city.garrison,
+                attack: Math.floor(city.garrison / 100),
+                defense: Math.floor(city.defense / 200)
+            };
+            
+            log('combat', '⚔️ 战斗开始！');
+            log('combat', '进攻【' + cityName + '】，敌军' + currentEnemy.hp + '人');
+            showCombatPanel();
+        }
+
+        function showCombatPanel() {
+            const panel = document.createElement('div');
+            panel.className = 'combat-panel';
+            panel.id = 'combatPanel';
+            panel.innerHTML = `
+                <div class="enemy-name">⚔️ ${currentEnemy.name} 守军</div>
+                <div class="hp-bar"><div class="hp-fill" id="enemyHpBar" style="width:100%"></div></div>
+                <div style="text-align:center" id="enemyHpText">${currentEnemy.hp}/${currentEnemy.maxHp}</div>
+                <div class="combat-btns" style="margin-top:15px">
+                    <button class="primary" onclick="combatAttack()">⚔️ 攻击</button>
+                    <button onclick="combatSkill()">✨ 技能</button>
+                    <button onclick="combatFlee()">🏃 撤退</button>
+                </div>
+            `;
+            document.getElementById('gameLog').appendChild(panel);
+            document.getElementById('gameLog').scrollTop = 9999;
+        }
+
+        function combatAttack() {
+            const damage = Math.max(1, player.attack + Math.floor(player.army / 100) - currentEnemy.defense);
+            currentEnemy.hp -= damage;
+            log('combat', '我军进攻！造成敌军伤亡 ' + damage + ' 人');
+            
+            if (currentEnemy.hp <= 0) { endCombat(true); return; }
+            
+            const enemyDmg = Math.max(1, currentEnemy.attack - player.defense);
+            const armyLoss = Math.floor(enemyDmg * 10);
+            player.army -= armyLoss;
+            log('combat', '敌军反击！我军伤亡 ' + armyLoss + ' 人');
+            
+            if (player.army <= 100) { log('combat', '部队伤亡惨重，撤退！'); inCombat = false; currentEnemy = null; }
+            else { updateCombatPanel(); }
+            
+            updateStatus();
+        }
+
+        function combatSkill() {
+            if (player.skills.length === 0) { log('system', '没有可用技能！'); return; }
+            const damage = player.attack * 2;
+            currentEnemy.hp -= damage;
+            log('combat', '使用【' + player.skills[0] + '】！造成 ' + damage + ' 伤亡');
+            if (currentEnemy.hp <= 0) { endCombat(true); return; }
+            
+            player.army -= Math.floor(currentEnemy.attack * 5);
+            if (player.army <= 100) { log('combat', '兵力不足，撤退！'); inCombat = false; currentEnemy = null; }
+            else { updateCombatPanel(); }
+            updateStatus();
+        }
+
+        function combatFlee() {
+            log('system', '撤退成功，但损失了一半粮草');
+            player.food = Math.floor(player.food / 2);
+            player.army = Math.floor(player.army * 0.8);
+            inCombat = false;
+            currentEnemy = null;
+            updateStatus();
+        }
+
+        function updateCombatPanel() {
+            const bar = document.getElementById('enemyHpBar');
+            const text = document.getElementById('enemyHpText');
+            if (bar && text) {
+                const pct = Math.max(0, currentEnemy.hp / currentEnemy.maxHp * 100);
+                bar.style.width = pct + '%';
+                text.textContent = currentEnemy.hp + '/' + currentEnemy.maxHp;
+            }
+        }
+
+        function endCombat(victory) {
+            inCombat = false;
+            const panel = document.getElementById('combatPanel');
+            if (panel) panel.remove();
+            
+            if (victory) {
+                const cityName = currentEnemy.name;
+                const city = CITIES[cityName];
+                const goldReward = Math.floor(city.economy * 10);
+                const expReward = Math.floor(city.economy * 5);
+                
+                city.owner = player.name;
+                city.garrison = Math.floor(city.garrison * 0.3);
+                player.gold += goldReward;
+                player.exp += expReward;
+                player.location = cityName;
+                
+                log('success', '🎉 战斗胜利！');
+                log('gold', '获得金币 ' + goldReward + '，经验 ' + expReward);
+                
+                checkLevelUp();
+            }
+            currentEnemy = null;
+            updateStatus();
+        }
+
+        function handleCombatCmd(cmd) {
+            if (cmd === '攻击' || cmd === 'attack') combatAttack();
+            else if (cmd === '技能') combatSkill();
+            else if (cmd === '撤退' || cmd === 'flee') combatFlee();
+            else log('system', '战斗中请使用：攻击、技能、撤退');
+        }
+
+        // ========== 养成系统 ==========
+        
+        function checkLevelUp() {
+            if (player.exp >= player.expToLevel) {
+                player.level++;
+                player.exp -= player.expToLevel;
+                player.expToLevel = Math.floor(player.expToLevel * 1.5);
+                player.attack += 3;
+                player.defense += 2;
+                player.army += 500;
+                log('success', '⭐ 升级到 ' + player.level + ' 级！攻击力+3，防御力+2，兵力+500');
+            }
+        }
+
+        function recruitSoldiers(amount) {
+            const num = parseInt(amount) || 100;
+            const cost = num * 2;
+            if (player.gold >= cost) {
+                player.gold -= cost;
+                player.army += num;
+                player.food += num;
+                log('success', '征召新兵 ' + num + ' 人，消耗金币 ' + cost);
+                updateStatus();
+            } else {
+                log('system', '金币不足，需要 ' + cost + ' 金币');
+            }
+        }
+
+        function buyItem(itemName) {
+            if (!itemName) { log('system', '请输入物品名，如：买 武器'); return; }
+            const item = ITEMS[itemName];
+            if (!item) { log('system', '未找到物品，可买：武器、防具、战马、兵力、粮草'); return; }
+            
+            if (player.gold >= item.price) {
+                player.gold -= item.price;
+                player.items[itemName] = (player.items[itemName] || 0) + 1;
+                
+                // 使用效果
+                if (itemName === '武器') player.attack += 5;
+                if (itemName === '防具') player.defense += 5;
+                if (itemName === '战马') player.attack += 3;
+                if (itemName === '兵力') player.army += 200;
+                if (itemName === '粮草') player.food += 100;
+                
+                log('success', '购买 ' + itemName + ' 成功！' + item.effect);
+                updateStatus();
+            } else {
+                log('system', '金币不足，需要 ' + item.price + ' 金币');
+            }
+        }
+
+        function sellItem(itemName) {
+            if (!itemName) { log('system', '请输入物品名'); return; }
+            if (player.items[itemName] && player.items[itemName] > 0) {
+                const item = ITEMS[itemName];
+                const price = Math.floor(item.price * 0.5);
+                player.items[itemName]--;
+                player.gold += price;
+                log('success', '出售 ' + itemName + '，获得 ' + price + ' 金币');
+                updateStatus();
+            } else {
+                log('system', '背包中没有 ' + itemName);
+            }
+        }
+
+        function recruitOfficer(officerName) {
+            const officer = OFFICERS_AVAILABLE.find(o => o.name === officerName);
+            if (!officer) { log('system', '未找到该武将'); return; }
+            
+            if (player.gold >= officer.cost) {
+                player.gold -= officer.cost;
+                player.officers.push(officer);
+                player.attack += Math.floor(officer.attack * 0.5);
+                player.defense += Math.floor(officer.defense * 0.5);
+                
+                log('success', '🎉 招募【' + officer.name + '】成功！');
+                log('success', '技能：【' + officer.skill + '】，全体攻击力+' + Math.floor(officer.attack * 0.5));
+                updateStatus();
+            } else {
+                log('system', '金币不足，需要 ' + officer.cost + ' 金币');
+            }
+        }
+
+        // ========== 面板显示 ==========
+        
+        function showStats() {
+            log('system', '═══ 角色状态 ═══');
+            log('narrative', '等级：' + player.level + ' | 经验：' + player.exp + '/' + player.expToLevel);
+            log('narrative', '攻击力：' + player.attack + ' | 防御力：' + player.defense);
+            log('narrative', '兵力：' + player.army + ' | 粮草：' + player.food);
+            log('narrative', '金币：' + player.gold + ' | 当前位置：' + player.location);
+            if (player.skills.length > 0) log('narrative', '技能：' + player.skills.join('、'));
+        }
+
+        function showMap() {
+            log('system', '═══ 天下地图 ═══');
+            for (const [name, city] of Object.entries(CITIES)) {
+                const flag = name === player.location ? '⭐' : (city.owner === player.name ? '✓' : '✗');
+                log('narrative', flag + ' ' + name + ' [' + city.owner + '] - ' + city.desc);
+            }
+            log('system', '输入"前往 城市名"移动');
+        }
+
+        function showBag() {
+            log('system', '═══ 背包 ═══');
+            const items = Object.entries(player.items).filter(([_, c]) => c > 0);
+            if (items.length === 0) { log('narrative', '背包是空的'); return; }
+            items.forEach(([name, count]) => log('narrative', name + ' x' + count));
+            log('system', '买 [物品] - 购买 | 卖 [物品] - 出售');
+        }
+
+        function showOfficers() {
+            log('system', '═══ 麾下武将 ═══');
+            if (player.officers.length === 0) { log('narrative', '尚未招募武将'); return; }
+            player.officers.forEach(o => log('narrative', '【' + o.name + '】[' + o.rank + '级] 攻击:' + o.attack + ' 防御:' + o.defense + ' 技能:' + o.skill));
+        }
+
+        function showRecruit() {
+            log('system', '═══ 可招募武将 ═══');
+            OFFICERS_AVAILABLE.forEach(o => {
+                const owned = player.officers.find(p => p.name === o.name);
+                const status = owned ? '(已招募)' : '';
+                log('narrative', '【' + o.name + '】[' + o.rank + '级] ' + o.desc + ' ' + o.cost + '金 ' + status);
+            });
+            log('system', '在输入框输入"招募 武将名"进行招募');
+        }
+
+        function showHelp() {
+            log('system', '═══ 指令帮助 ═══');
+            log('narrative', '状态 - 查看角色属性');
+            log('narrative', '地图 - 查看天下局势');
+            log('narrative', '背包 - 查看物品栏');
+            log('narrative', '招募 - 查看可招募武将');
+            log('narrative', '前往 [地名] - 移动城市');
+            log('narrative', '进攻 [地名] - 发起攻城战');
+            log('narrative', '买 [物品] - 购买物品');
+            log('narrative', '征兵 [数量] - 征召士兵');
+            log('narrative', '存档 - 保存进度');
+            log('narrative', '读档 - 读取进度');
+        }
+
+        // ========== 存档系统 ==========
+        
+        function saveGame() {
+            try {
+                localStorage.setItem('sanguo_save', JSON.stringify(player));
+                log('success', '💾 存档成功！');
+            } catch(e) { log('combat', '存档失败'); }
+        }
+
+        function loadGame() {
+            try {
+                const data = localStorage.getItem('sanguo_save');
+                if (data) {
+                    player = JSON.parse(data);
+                    document.getElementById('gameLog').innerHTML = '';
+                    log('system', '📂 读档成功！');
+                    log('narrative', '你身在【' + player.location + '】');
+                    updateStatus();
+                } else { log('system', '没有存档'); }
+            } catch(e) { log('combat', '读档失败'); }
+        }
+
+        // ========== 初始化 ==========
+        
+        log('system', '🏯 欢迎来到《三国：逐鹿天下》');
+        log('narrative', '天下大势，分久必合，合久必分。');
+        log('narrative', '你身在【' + player.location + '】，' + CITIES[player.location].desc);
+        log('system', '可前往：' + CITIES[player.location].adjacent.join('、'));
+        log('system', '输入"帮助"查看指令');
+        updateStatus();
+    </script>
+</body>
+</html>
