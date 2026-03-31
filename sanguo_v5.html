@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三国：乱世烽火</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", sans-serif; background: linear-gradient(180deg, #1a1a2e 0%, #0a0a15 100%); color: #e8dcc4; padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        
+        .header { background: linear-gradient(135deg, #2c1810, #4a2c20); padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 15px; border: 2px solid #8b4513; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .header h1 { margin: 0; font-size: 1.5rem; color: #d4af37; letter-spacing: 4px; text-shadow: 2px 2px 4px #000; }
+        .header .subtitle { font-size: 0.8rem; color: #a08060; margin-top: 5px; }
+        
+        .status { display: none; justify-content: space-around; background: #1a1520; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #3a2a1a; flex-wrap: wrap; gap: 8px; }
+        .status-item { text-align: center; min-width: 55px; }
+        .status-label { font-size: 0.7rem; color: #8a7a6a; }
+        .status-value { color: #d4af37; font-weight: bold; }
+        
+        .time-info { display: none; text-align: center; padding: 8px; background: #1a1520; border-radius: 8px; margin-bottom: 10px; border: 1px solid #3a2a1a; font-size: 0.85rem; }
+        .time-year { color: #d4af37; }
+        .time-season { color: #8a7a6a; }
+        .time-weather { color: #7a9acd; }
+        
+        #gameLog { background: #0f0a08; padding: 15px; height: 350px; overflow-y: auto; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2a1a10; }
+        #gameLog::-webkit-scrollbar { width: 4px; }
+        #gameLog::-webkit-scrollbar-thumb { background: #8b4513; border-radius: 2px; }
+        
+        .message { margin-bottom: 14px; line-height: 1.8; font-size: 0.95rem; }
+        .scene { color: #9ab87a; border-left: 3px solid #4a6a4a; padding-left: 10px; margin: 10px 0; }
+        .person { color: #c4a47a; }
+        .dialogue { color: #9ab87a; font-style: italic; }
+        .system { color: #7a9acd; }
+        .narrative { color: #c4b49c; }
+        .combat { color: #c97a7a; }
+        .success { color: #8acd7a; }
+        .gold { color: #d4af37; }
+        .important { color: #cd7a8a; font-weight: bold; }
+        .hint { color: #6a8aaa; font-size: 0.85rem; }
+        .qa { color: #b8a0d0; border-left: 3px solid #6a5080; padding-left: 10px; margin: 8px 0; }
+        
+        .input-area { display: flex; gap: 10px; }
+        #commandInput { flex: 1; padding: 12px; background: #1a1520; color: #c4b49c; border: 1px solid #3a2a1a; border-radius: 8px; font-size: 1rem; }
+        #commandInput:focus { outline: none; border-color: #8b4513; }
+        #sendBtn { background: #8b4513; color: #d4af37; font-weight: bold; padding: 12px 20px; border: 1px solid #d4af37; }
+        
+        .choice-btn { display: block; width: 100%; padding: 15px; margin: 10px 0; background: linear-gradient(135deg, #1a1520, #2a1a10); border: 2px solid #8b4513; border-radius: 10px; color: #c4b49c; cursor: pointer; text-align: left; font-size: 1rem; transition: all 0.2s; }
+        .choice-btn:hover { background: linear-gradient(135deg, #2a201a, #3a2a1a); border-color: #d4af37; transform: translateX(5px); }
+        .choice-title { color: #d4af37; font-size: 1.1rem; font-weight: bold; }
+        .choice-desc { font-size: 0.85rem; color: #8a7a6a; margin-top: 5px; }
+        .choice-bonus { font-size: 0.8rem; color: #7a9acd; margin-top: 3px; }
+        
+        .panel-btn { display: none; padding: 10px; background: #1a1520; color: #8a7a6a; border: 1px solid #3a2a1a; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+        .panel-btn:hover { border-color: #8b4513; color: #d4af37; }
+        
+        @media (max-width: 400px) {
+            .header h1 { font-size: 1.2rem; }
+            .message { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header" id="startHeader">
+        <h1>三國：亂世烽火</h1>
+        <div class="subtitle">东汉末年，烽烟四起</div>
+    </div>
+    
+    <div id="startPanel">
+        <div id="gameLog" style="height: 420px;">
+            <div class="message narrative">
+                东风忽起，垂杨舞回。<br><br>
+                恍惚间，耳边似有金戈铁马之声...<br><br>
+                待睁眼时，却见自己立于<br>
+                古道荒郊，黄沙漫天...
+            </div>
+            <div class="message system">
+                ─────────────────────────<br>
+                公子从何而来？
+            </div>
+            
+            <button class="choice-btn" onclick="chooseOrigin(1)">
+                <div class="choice-title">其一：附身名将</div>
+                <div class="choice-desc">天机弄人，魂魄附于当世名将之身</div>
+                <div class="choice-bonus">☆ 初始武力高，装备精良，名震天下</div>
+            </button>
+            
+            <button class="choice-btn" onclick="chooseOrigin(2)">
+                <div class="choice-title">其二：门客随从</div>
+                <div class="choice-desc">投靠贤主，为其帐下门客或亲卫</div>
+                <div class="choice-bonus">☆ 有所依傍，获赠基本兵器，行事便利</div>
+            </button>
+            
+            <button class="choice-btn" onclick="chooseOrigin(3)">
+                <div class="choice-title">其三：布衣白身</div>
+                <div class="choice-desc">孑然一身，无权无势，从头来过</div>
+                <div class="choice-bonus">☆ 白手起家，一切从零开始</div>
+            </button>
+        </div>
+    </div>
+    
+    <div class="header" id="gameHeader" style="display:none;">
+        <h1>三國：亂世烽火</h1>
+    </div>
+    
+    <div class="time-info" id="timeInfo">
+        <span class="time-year" id="yearText">189年</span> ·
+        <span class="time-season" id="seasonText">春</span> ·
+        <span class="time-weather" id="weatherText">晴</span>
+    </div>
+    
+    <div class="status" id="statusBar">
+        <div class="status-item"><div class="status-label">武力</div><div class="status-value" id="attack">10</div></div>
+        <div class="status-item"><div class="status-label">智力</div><div class="status-value" id="intelligence">10</div></div>
+        <div class="status-item"><div class="status-label">防御</div><div class="status-value" id="defense">5</div></div>
+        <div class="status-item"><div class="status-label">粮草</div><div class="status-value" id="food">50</div></div>
+        <div class="status-item"><div class="status-label">银两</div><div class="status-value" id="silver">0</div></div>
+    </div>
+    
+    <div id="mainLog" style="display:none;"></div>
+    
+    <div style="display:none; margin-bottom:10px;" id="quickBtns">
+        <button class="panel-btn" onclick="showStatus()">📜 状态</button>
+        <button class="panel-btn" onclick="showInventory()">📦 行囊</button>
+        <button class="panel-btn" onclick="lookAround()">👀 四顾</button>
+        <button class="panel-btn" onclick="saveGame()">💾 存档</button>
+    </div>
+    
+    <div class="input-area" id="inputArea" style="display:none;">
+        <input type="text" id="commandInput" placeholder="可以说任何想做的事，或问任何问题..." onkeypress="if(event.key==='Enter')sendCommand()">
+        <button id="sendBtn" onclick="sendCommand()">确定</button>
+    </div>
+
+    <script>
+        // ========== 游戏数据 ==========
+        
+        const SEASONS = ["初春", "仲春", "暮春", "初夏", "仲夏", "暮夏", "初秋", "仲秋", "暮秋", "初冬", "仲冬", "暮冬"];
+        const WEATHER = ["晴", "阴", "多云", "小雨", "大雨", "雾", "风沙", "雪"];
+        
+        const WEATHER_DESC = {
+            "晴": "天朗气清，阳光和煦", "阴": "天色阴沉，铅云压顶", "多云": "云层密布，遮天蔽日",
+            "小雨": "细雨绵绵，润物无声", "大雨": "倾盆大雨，道路泥泞", "雾": "大雾弥漫，视野不清",
+            "风沙": "黄沙漫天，迷眼难行", "雪": "大雪纷飞，银装素裹"
+        };
+        
+        const LOCATIONS = {
+            "洛阳": { owner: "东汉", type: "都城", desc: "帝都繁华，然天子蒙尘", detail: "洛阳乃东汉都城，位列十三朝古都，城高池深，人口数十万。虽董卓祸乱，天子蒙尘，然其繁华不减，商铺林立。" },
+            "许昌": { owner: "曹操", type: "要地", desc: "曹操根基，兵马强壮", detail: "许昌原属颍川郡，曹操迁都于此，号为"许都"。此地北可威胁洛阳，南可平定江汉，乃兵家必争之地。" },
+            "长安": { owner: "东汉", type: "古城", desc: "西都故地，宫阙荒凉", detail: "长安乃西汉都城，周秦汉皆定都于此。未央宫遗址尚在，然战乱频仍，已不复昔日辉煌。" },
+            "南阳": { owner: "东汉", type: "郡治", desc: "卧龙躬耕，水月秀美", detail: "南阳乃光武中兴之地，卧龙岗上诸葛先生曾躬耕于此。白河穿城而过，物产丰饶。" },
+            "襄阳": { owner: "刘表", type: "要冲", desc: "荆州重镇，北望中原", detail: "襄阳为荆州治所，北可图中原，南可守江东。刘表治理有方，百姓安宁。" },
+            "新野": { owner: "东汉", type: "小城", desc: "弹丸之地，偏安一隅", detail: "新野乃弹丸小城，然地理位置重要，为南阳屏障。刘备曾屯兵于此。" },
+            "沛县": { owner: "东汉", type: "县治", desc: "刘邦故里，民风淳朴", detail: "沛县乃汉高祖刘邦故里，民风淳朴，尚武之风盛行。" },
+            "徐州": { owner: "陶谦", type: "名城", desc: "兵家必争，四战之地", detail: "徐州为九州之一，北临青冀，西接豫州，东傍大海，乃四战之地，兵家必争。" },
+            "小沛": { owner: "刘备", type: "小城", desc: "玄德暂居之所", detail: "小沛乃刘备暂居之地，虽是小城，却有英雄之气。" },
+            "下邳": { owner: "吕布", type: "要塞", desc: "奉先据守，粮草丰足", detail: "下邳为徐州大城，城墙坚固，吕布曾据此对抗曹操。泗水环城，易守难攻。" },
+            "陈留": { owner: "曹操", type: "要地", desc: "曹操起兵之地", detail: "陈留乃曹操起兵之地，距洛阳不远，郡守张邈曾与曹操共盟。" },
+            "酸枣": { owner: "东汉", type: "联军", desc: "十八路诸侯会盟", detail: "酸枣为十八路诸侯会盟之所，各路人马在此结盟，共讨董卓。" }
+        };
+
+        const SCENE_ELEMENTS = {
+            "城镇": {
+                "清晨": ["炊烟袅袅升起，城门刚刚开启", "更夫打着哈欠走过", "早起的商贩正在摆摊", "城头哨兵眼神警惕"],
+                "日中": ["街市繁华，讨价还价声此起彼伏", "酒肆门口酒旗飘扬", "官兵巡逻而过", "百姓行色匆匆"],
+                "傍晚": ["夕阳西下，家家户户炊烟升起", "城门缓缓关闭", "打更人开始巡夜", "流浪狗在巷口游荡"],
+                "夜晚": ["万籁俱寂，唯有更鼓声远远传来", "灯火阑珊，青楼传来丝竹声", "官兵巡夜，脚步声整齐"]
+            },
+            "野外": {
+                "清晨": ["晨雾笼罩，草木上露珠晶莹", "鸟儿在林间啼鸣", "远处传来犬吠", "农人已在田间劳作"],
+                "日中": ["官道尘土飞扬", "商队缓缓而行", "偶尔有快马掠过", "知了在树梢声嘶力竭"],
+                "傍晚": ["夕阳把官道染成金色", "倦鸟归林", "远处传来悠扬的笛声", "农人荷锄归去"],
+                "夜晚": ["繁星点点，四下虫鸣", "猫头鹰在林间啼叫", "偶尔有狼嚎声传来", "月光如水，洒落一地"]
+            }
+        };
+        
+        const ENCOUNTERS = [
+            { type: "merchant", name: "商贩", desc: "一个背着货箱的商人", dialog: '"这位爷，买些干货否？"' },
+            { type: "soldier", name: "官兵", desc: "一队巡逻的官兵", dialog: '"站住！例行检查！"' },
+            { type: "refugee", name: "流民", desc: "拖家带口的难民", dialog: '"老爷，行行好..."' },
+            { type: "scholar", name: "书生", desc: "赶考的书生", dialog: '"这位兄台，幸会幸会"' },
+            { type: "bandit", name: "山贼", desc: "拦路抢劫的盗贼", dialog: '"此树是我栽！"' },
+            { type: "farmer", name: "农夫", desc: "在田间劳作的农人", dialog: '"这位公子从何而来？"' },
+            { type: "monk", name: "僧人", desc: "云游四方的高僧", dialog: '"阿弥陀佛，施主有礼了"' },
+            { type: "beauty", name: "女子", desc: "貌美的女子", dialog: '"公子万福..."' }
+        ];
+
+        const ITEMS = {
+            "长剑": { type: "武器", value: 50, effect: "+3武力" },
+            "环首刀": { type: "武器", value: 80, effect: "+5武力" },
+            "长矛": { type: "武器", value: 60, effect: "+4武力" },
+            "布衣": { type: "防具", value: 30, effect: "+2防御" },
+            "皮甲": { type: "防具", value: 60, effect: "+4防御" },
+            "铁甲": { type: "防具", value: 120, effect: "+8防御" },
+            "干粮": { type: "消耗", value: 10, effect: "+20粮草" },
+            "酒肉": { type: "消耗", value: 30, effect: "+50粮草" },
+            "地图": { type: "特殊", value: 100, effect: "开启地图" },
+            "银两": { type: "货币", value: 1 }
+        };
+
+        // ========== 开放式问答知识库 ==========
+        
+        const QA_KNOWLEDGE = {
+            // 天下局势
+            "局势": ["当今朝廷昏暗，董卓秉政，诸侯割据一方，天下大乱矣。", "黄巾虽平，然余党尚存。各路诸侯拥兵自重，意图逐鹿中原。", "当今之计，乱世出英雄。或有争霸天下，或有择主而事。"],
+            "天下": ["天下大乱，诸侯并起。曹操、刘备、孙策、袁绍，皆当世英雄也。", "合久必分，分久必合。自黄巾乱后，天下遂入纷争之世。"],
+            "董卓": ["董卓字仲颖，陇西人。入京后废帝专权，残暴不仁，洛阳百姓苦不堪言。", "董卓祸乱京师，劫迁天子，焚烧宫室，实乃国贼也。"],
+            "曹操": ["曹操字孟德，沛国谯县人。挟天子以令诸侯，帐下猛将如云，谋士如雨。", "曹操此人，治世之能臣，乱世之奸雄。", "曹孟德有经天纬地之才，然性格多疑，常行宁可我负天下人之事。"],
+            "刘备": ["刘备字玄德，汉中山靖王之后。为人仁德，善于用人，关羽张飞皆愿效死力。", "刘备虽无根基，然心系汉室，四处投靠以图大业。", "玄德公以仁义闻名天下，然兵力匮乏，常寄人篱下。"],
+            "孙权": ["孙权字仲谋，孙坚之子，孙策之弟。占据江东，地盘稳固。", "江东孙氏，三世据有江东，兵精粮足，百姓归心。"],
+            "袁绍": ["袁绍字本初，四世三公，门生故吏遍布天下，势力最为雄厚。", "袁绍兵多地广，然优柔寡断，难成大事。"],
+            "袁术": ["袁术字公路，袁绍之弟。占据南阳，兵精粮足，然野心勃勃。"],
+            "吕布": ["吕布字奉先，并州人。勇武天下第一，然反复无常，见利忘义。", "吕布有飞将之称，方天画戟，无人可挡。然三姓家奴之名，亦人所不齿。"],
+            "关羽": ["关羽字云长，河东解人。与刘备张飞桃园结义，义薄云天。", "关公青龙偃月刀，百万军中取上将首级，如探囊取物。"],
+            "张飞": ["张飞字益德，涿郡人。与刘备关羽结义，勇猛异常。", "张飞性如烈火，然亦有粗中有细之时。"],
+            "诸葛亮": ["诸葛亮字孔明，号卧龙。居南阳躬耕，后为刘备军师，运筹帷幄。", "卧龙先生上知天文，下知地理，未出茅庐而三分天下。"],
+            
+            // 当前时间相关
+            "黄巾": ["黄巾之乱始于张角，太平道聚众数十万。后被镇压，然余党尚在山中。"],
+            "联军": ["十八路诸侯会盟酸枣，共讨董卓。然各怀鬼胎，终不成事。"],
+            
+            // 地理相关
+            "洛阳": ["洛阳乃东汉都城，十三朝古都。", "洛阳虽在天子脚下，然董卓祸乱，已非安全之地。"],
+            "许昌": ["许昌乃曹操根基之地，号为许都。"],
+            "长安": ["长安为西都，故宫阙荒凉，然地理位置重要。"],
+            "南阳": ["南阳乃卧龙躬耕之所，水月秀美。"],
+            "徐州": ["徐州为兵家必争之地，四战之地。"],
+            
+            // 询问玩家
+            "你是谁": ["贫道乃一介书生，游历四方耳。", "在下无名小卒，不足挂齿。", "汝问此作甚？"],
+            "何人": ["贫道云游至此，见此处风景不俗。", "一介布衣耳，四处游历。"],
+            "做什么": ["四方云游，增长见闻耳。", "寻访贤主，以图一展所长。"],
+            "去哪": ["随遇而安，四海为家。", "前方或有可用之处。"],
+            
+            // 通用问题
+            "路": ["此去前方官道可达，若走小径亦可。", "顺着此路往北便是。"],
+            "城": ["附近城池颇多，需探查方知。"],
+            "吃": ["前方或有酒肆，可供休憩。"],
+            "住": ["可寻客栈投宿，或借宿寺庙亦可。"],
+            "钱": ["可通过做工、贩卖、战斗获取。"],
+            "武器": ["城内兵器铺可购置，或击败山贼亦可得。"],
+            
+            // 当地相关
+            "这里": ["此间乃" + (player.location || "") + "是也。", "此处名为" + (player.location || "无名之地") + "。"]
+        };
+        
+        // 动态生成当地信息
+        function getLocalInfo() {
+            const loc = LOCATIONS[player.location];
+            if (loc) {
+                return [loc.detail, "此地属" + loc.owner + "所辖，" + loc.desc];
+            }
+            return ["此地荒凉，人迹罕至。"];
+        }
+
+        // ========== 意图识别系统 ==========
+        
+        const INTENTS = {
+            "move": {
+                keywords: ["去", "前往", "到", "去往", "去到", "走", "赴", "去那", "去这里", "奔", "赶赴"],
+                action: (target) => moveTo(target)
+            },
+            "explore": {
+                keywords: ["探索", "探查", "查看", "搜寻", "寻找", "寻觅", "找找", "四下看看", "四处看看", "看看", "逛逛", "走走"],
+                action: () => explore()
+            },
+            "status": {
+                keywords: ["状态", "属性", "能力", "看我", "我的属性", "怎么样", "如何", "多少"],
+                action: () => showStatus()
+            },
+            "inventory": {
+                keywords: ["背包", "行囊", "包裹", "物品", "有什么", "家当", "东西", "装备"],
+                action: () => showInventory()
+            },
+            "inquire": {
+                keywords: ["打探", "打听", "问问", "询问", "问问看", "消息", "情况", "了解"],
+                action: () => inquire()
+            },
+            "talk": {
+                keywords: ["交谈", "谈话", "聊天", "说话", "聊聊", "说说话", "聊一聊", "聊聊天", "搭话", "讲话", "问"],
+                action: () => handleQA(document.getElementById('commandInput').value)
+            },
+            "fight": {
+                keywords: ["战斗", "打架", "打", "杀", "砍", "杀敌", "攻击", "进攻", "攻打", "打一场", "收拾"],
+                action: (target) => fight(target)
+            },
+            "buy": {
+                keywords: ["买", "购买", "购置", "买些", "买一点", "卖点", "换", "换点"],
+                action: (target) => buyItem(target)
+            },
+            "eat": {
+                keywords: ["吃", "进食", "吃饭", "用膳", "填饱", "补充", "吃些"],
+                action: (target) => eatFood(target)
+            },
+            "rest": {
+                keywords: ["休息", "睡觉", "就寝", "歇息", "歇一歇", "睡一觉", "养精蓄锐", "恢复"],
+                action: () => rest()
+            },
+            "save": {
+                keywords: ["存档", "保存", "记录", "存一下"],
+                action: () => saveGame()
+            },
+            "load": {
+                keywords: ["读档", "读取", "加载", "继续"],
+                action: () => loadGame()
+            },
+            "look": {
+                keywords: ["四顾", "看看", "环顾", "观察", "看看周围", "四周看看", "张望"],
+                action: () => lookAround()
+            },
+            "help": {
+                keywords: ["帮助", "help", "指令", "怎么玩"],
+                action: () => showHelp()
+            }
+        };
+
+        // ========== 自然语言处理 ==========
+        
+        function preprocess(text) {
+            return text.toLowerCase().replace(/[，。！？、,.!?；:：]/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+        
+        function recognizeIntent(text) {
+            text = preprocess(text);
+            
+            for (const [intentName, intentData] of Object.entries(INTENTS)) {
+                const keywords = intentData.keywords || [];
+                for (const keyword of keywords) {
+                    if (text.includes(keyword)) {
+                        const target = extractTarget(text, keyword);
+                        return { intent: intentName, target: target, confidence: 1.0 };
+                    }
+                }
+            }
+            
+            return { intent: "unknown", target: "", confidence: 0 };
+        }
+        
+        function extractTarget(text, keyword) {
+            const idx = text.indexOf(keyword);
+            if (idx === -1) return "";
+            let target = text.substring(idx + keyword.length).trim();
+            target = target.replace(/^(一个|一座|那|这个|去|到|往)/, '');
+            return target;
+        }
+
+        // ========== 问答系统 ==========
+        
+        function handleQA(userInput) {
+            if (!userInput || player.origin === 0) return;
+            
+            userInput = preprocess(userInput);
+            const keywords = Object.keys(QA_KNOWLEDGE);
+            
+            // 1. 先检查是否匹配知识库
+            let matched = false;
+            for (const kw of keywords) {
+                if (userInput.includes(kw)) {
+                    const answers = QA_KNOWLEDGE[kw];
+                    const answer = answers[Math.floor(Math.random() * answers.length)];
+                    log('qa', '▸ ' + answer);
+                    matched = true;
+                    break;
+                }
+            }
+            
+            if (!matched) {
+                // 2. 检查是否是询问当前地点
+                if (userInput.includes("这里") || userInput.includes("此") || userInput.includes("本地")) {
+                    const localInfo = getLocalInfo();
+                    localInfo.forEach(info => log('qa', '▸ ' + info));
+                    matched = true;
+                }
+            }
+            
+            if (!matched) {
+                // 3. 通用回答
+                const generalAnswers = [
+                    "此中缘由，恕贫道不便多言。",
+                    "此事说来话长，且容后禀。",
+                    "公子所问，颇有意思。然贫道才疏学浅，不敢妄言。",
+                    "我亦不知其中详情，公子可自探查一番。",
+                    "此事若有机缘，自会知晓。"
+                ];
+                log('qa', '▸ ' + generalAnswers[Math.floor(Math.random() * generalAnswers.length)]);
+                log('hint', '可问：局势、天下、董卓、曹操、刘备、此处等信息');
+            }
+            
+            // 随机触发遭遇
+            if (Math.random() > 0.6) {
+                triggerEncounter("日中");
+            } else {
+                showScene();
+            }
+        }
+        
+        // 问答意图识别（独立于动作指令）
+        function isQuestion(text) {
+            const questionWords = ["吗", "呢", "如何", "怎样", "什么", "哪", "问", "知道", "请", "求解", "为何", "为什么"];
+            text = preprocess(text);
+            return questionWords.some(w => text.includes(w)) || text.endsWith("?");
+        }
+
+        let player = {
+            origin: 0, name: "", year: 0, season: 0, weather: 0,
+            attack: 10, intelligence: 10, defense: 10,
+            food: 50, silver: 0, location: "", locationType: "野外",
+            discovered: [], inventory: {}, flags: {}, encounters: 0, hp: 100, maxHp: 100
+        };
+        
+        function log(type, text) {
+            const container = player.origin > 0 ? document.getElementById('mainLog') : document.getElementById('gameLog');
+            const div = document.createElement('div');
+            div.className = 'message ' + type;
+            div.innerHTML = text;
+            container.appendChild(div);
+            container.scrollTop = 9999;
+        }
+
+        function updateStatus() {
+            document.getElementById('attack').textContent = player.attack;
+            document.getElementById('intelligence').textContent = player.intelligence;
+            document.getElementById('defense').textContent = player.defense;
+            document.getElementById('food').textContent = player.food;
+            document.getElementById('silver').textContent = player.silver;
+            document.getElementById('yearText').textContent = player.year + '年';
+            document.getElementById('seasonText').textContent = SEASONS[player.season];
+            document.getElementById('weatherText').textContent = WEATHER[player.weather];
+        }
+
+        function updateTime() {
+            if (Math.random() > 0.6) {
+                player.encounters++;
+                player.season++;
+                if (player.season >= 12) { player.season = 0; player.year++; }
+                if (Math.random() > 0.5) player.weather = Math.floor(Math.random() * WEATHER.length);
+            }
+            updateStatus();
+            if (player.encounters % 3 === 0) {
+                log('system', '─── ' + player.year + '年 ' + SEASONS[player.season] + ' ───');
+            }
+        }
+
+        function sendCommand() {
+            const input = document.getElementById('commandInput');
+            const cmd = input.value.trim();
+            if (!cmd) return;
+            input.value = '';
+            log('system', '> ' + cmd);
+            processWithIntent(cmd);
+        }
+        
+        function processWithIntent(text) {
+            // 检查是否是问答
+            if (isQuestion(text)) {
+                handleQA(text);
+                updateTime();
+                return;
+            }
+            
+            const result = recognizeIntent(text);
+            
+            if (result.intent === "unknown") {
+                // 尝试作为问答处理
+                handleQA(text);
+                updateTime();
+                return;
+            }
+            
+            const intentData = INTENTS[result.intent];
+            if (intentData && intentData.action) {
+                if (result.target) intentData.action(result.target);
+                else intentData.action();
+            }
+            
+            updateTime();
+        }
+
+        function chooseOrigin(type) {
+            player.origin = type;
+            player.year = 183 + Math.floor(Math.random() * 7);
+            player.season = Math.floor(Math.random() * 12);
+            player.weather = Math.floor(Math.random() * WEATHER.length);
+            
+            if (type === 1) {
+                player.attack = 25; player.intelligence = 18; player.defense = 15;
+                player.food = 100; player.silver = 50;
+                player.location = "洛阳"; player.locationType = "城镇";
+                player.discovered = ["洛阳", "许昌", "长安", "新野"];
+                player.inventory = { "环首刀": 1, "铁甲": 1, "干粮": 5, "银两": 50 };
+                log('important', '☆ 附身成功！');
+                log('narrative', '汝竟附于此身！但觉浑身气血充盈，武艺傍身。');
+            }
+            else if (type === 2) {
+                player.attack = 15; player.intelligence = 12; player.defense = 10;
+                player.food = 80; player.silver = 20;
+                player.location = "新野"; player.locationType = "城镇";
+                player.discovered = ["新野", "南阳"];
+                player.inventory = { "长剑": 1, "布衣": 1, "干粮": 3, "银两": 20 };
+                log('important', '☆ 投靠成功！');
+                log('narrative', '得主收留，得以安身立命。');
+            }
+            else {
+                player.attack = 8; player.intelligence = 10; player.defense = 5;
+                player.food = 30; player.silver = 5;
+                player.location = "沛县"; player.locationType = "野外";
+                player.discovered = ["沛县"];
+                player.inventory = { "干粮": 2, "银两": 5 };
+                log('important', '☆ 出身布衣！');
+                log('narrative', '孑然一身，无权无势。然大丈夫生于天地间，岂能郁郁久居人下？');
+            }
+            
+            enterGame();
+        }
+
+        function enterGame() {
+            document.getElementById('startPanel').style.display = 'none';
+            document.getElementById('startHeader').style.display = 'none';
+            document.getElementById('gameHeader').style.display = 'block';
+            document.getElementById('timeInfo').style.display = 'block';
+            document.getElementById('statusBar').style.display = 'flex';
+            document.getElementById('mainLog').style.display = 'block';
+            document.getElementById('quickBtns').style.display = 'block';
+            document.getElementById('inputArea').style.display = 'flex';
+            
+            document.getElementById('mainLog').innerHTML = '';
+            
+            log('narrative', '═══════════════════════════');
+            log('system', '　　公元' + player.year + '年，黄巾乱后，董卓秉政');
+            log('system', '　　天下动荡，诸侯蜂起，烽火连天');
+            log('narrative', '═══════════════════════════');
+            
+            log('system', '─── 自由交互 ───');
+            log('hint', '▸ 移动：去许昌 / 前往洛阳');
+            log('hint', '▸ 探索：探索一下 / 四处看看');
+            log('hint', '▸ 问答：局势如何？/ 曹操是谁？/ 这里是什么地方？');
+            log('hint', '▸ 交易：买干粮 / 卖武器');
+            log('system', '─────────────────────');
+            
+            showScene();
+            updateStatus();
+        }
+
+        function showScene() {
+            const hour = Math.floor(Math.random() * 24);
+            let timeOfDay = hour >= 5 && hour < 9 ? "清晨" : hour >= 9 && hour < 17 ? "日中" : hour >= 17 && hour < 21 ? "傍晚" : "夜晚";
+            const weather = WEATHER[player.weather];
+            
+            const elements = SCENE_ELEMENTS[player.locationType][timeOfDay];
+            const sceneDesc = elements[Math.floor(Math.random() * elements.length)];
+            
+            log('scene', '【' + player.location + '】' + timeOfDay);
+            log('narrative', sceneDesc + '，' + WEATHER_DESC[weather] + '。');
+        }
+
+        function lookAround() {
+            log('system', '─── 四顾周遭 ───');
+            showScene();
+        }
+
+        function triggerEncounter(timeOfDay) {
+            const encounter = ENCOUNTERS[Math.floor(Math.random() * ENCOUNTERS.length)];
+            log('system', '────────────────────');
+            log('person', '【遭遇】' + encounter.desc);
+            log('dialogue', encounter.dialog);
+            log('hint', '可以询问或交谈');
+        }
+
+        function moveTo(cityName) {
+            if (!cityName) { log('system', '想去哪里？可以说"去许昌"'); return; }
+            const matchedCity = findCity(cityName);
+            if (!matchedCity || !player.discovered.includes(matchedCity)) {
+                log('system', '未知此地。可先探索或打探消息。');
+                return;
+            }
+            if (player.food < 15) { log('combat', '粮草不足！'); return; }
+            
+            player.food -= 15;
+            player.location = matchedCity;
+            const cityType = LOCATIONS[matchedCity]?.type;
+            player.locationType = (cityType === "都城" || cityType === "名城" || cityType === "要地" || cityType === "小城" || cityType === "郡治" || cityType === "县城" || cityType === "县治" || cityType === "要塞" || cityType === "联军") ? "城镇" : "野外";
+            
+            log('success', '── ' + matchedCity + ' ──');
+            log('narrative', LOCATIONS[matchedCity]?.desc || "此地荒凉");
+            showScene();
+        }
+        
+        function findCity(name) {
+            if (!name) return null;
+            name = name.toLowerCase();
+            if (LOCATIONS[name]) return name;
+            for (const city of Object.keys(LOCATIONS)) {
+                if (city.includes(name) || name.includes(city)) return city;
+            }
+            return null;
+        }
+
+        function explore() {
+            if (player.food < 10) { log('combat', '腹中饥饿！'); return; }
+            player.food -= 10;
+            
+            const undiscovered = Object.keys(LOCATIONS).filter(c => !player.discovered.includes(c));
+            if (undiscovered.length > 0 && Math.random() > 0.4) {
+                const newCity = undiscovered[Math.floor(Math.random() * undiscovered.length)];
+                player.discovered.push(newCity);
+                log('success', '✨ 有所发现！前方有一城曰"' + newCity + '"');
+            } else if (Math.random() > 0.3) {
+                const finds = ["一株野果", "一口清泉", "一处破庙", "一副遗骸"];
+                const find = finds[Math.floor(Math.random() * finds.length)];
+                log('narrative', '探索一番，发现' + find + '。');
+                if (Math.random() > 0.5) { player.food += 10; log('success', '补充粮草'); }
+            } else {
+                log('narrative', '行了半日，未见人迹');
+            }
+            showScene();
+        }
+
+        function inquire() {
+            log('system', '─── 打探消息 ───');
+            const news = [
+                "近日曹操在陈留招兵买马，意图不小", "刘备近日在小沛屯兵",
+                "董卓残暴，洛阳百姓苦不堪言", "黄巾余党仍在大山深处盘踞",
+                "北方袁绍四世三公，势力日盛", "江东孙坚勇猛无敌",
+                "吕布占据了下邳", "陶谦让徐州，刘备有了落脚之地"
+            ];
+            const idx1 = Math.floor(Math.random() * news.length);
+            let idx2 = Math.floor(Math.random() * news.length);
+            while (idx2 === idx1) idx2 = Math.floor(Math.random() * news.length);
+            log('narrative', '▸ ' + news[idx1]);
+            log('narrative', '▸ ' + news[idx2]);
+            
+            if (Math.random() > 0.6) {
+                const undiscovered = Object.keys(LOCATIONS).filter(c => !player.discovered.includes(c));
+                if (undiscovered.length > 0) {
+                    const newCity = undiscovered[Math.floor(Math.random() * undiscovered.length)];
+                    player.discovered.push(newCity);
+                    log('success', '✨ 打探得知：前方有一城曰"' + newCity + '"');
+                }
+            }
+            showScene();
+        }
+
+        function showStatus() {
+            log('system', '─── 自身状态 ───');
+            log('narrative', '武力：' + player.attack + ' | 智力：' + player.intelligence + ' | 防御：' + player.defense);
+            log('narrative', '粮草：' + player.food + ' | 银两：' + player.silver);
+            log('narrative', '当前：' + player.location + ' | 已发现：' + player.discovered.length + '座城');
+        }
+
+        function showInventory() {
+            log('system', '─── 行囊之中 ───');
+            const items = Object.entries(player.inventory);
+            if (items.length === 0) { log('narrative', '行囊空空如也...'); return; }
+            items.forEach(([item, count]) => {
+                const info = ITEMS[item];
+                log('narrative', item + ' ×' + count + (info ? ' (' + (info.effect || '') + ')' : ''));
+            });
+            log('hint', '可以说"吃干粮"或"卖XX"');
+        }
+
+        function buyItem(itemName) {
+            if (!itemName) { log('system', '想买什么？干粮(10文)、酒肉(30文)、武器等'); return; }
+            
+            const buyTargets = {
+                "干粮": { item: "干粮", price: 10 }, "粮草": { item: "干粮", price: 10 },
+                "酒肉": { item: "酒肉", price: 30 }, "肉": { item: "酒肉", price: 30 },
+                "长剑": { item: "长剑", price: 50 }, "环首刀": { item: "环首刀", price: 80 },
+                "长矛": { item: "长矛", price: 60 }, "布衣": { item: "布衣", price: 30 },
+                "皮甲": { item: "皮甲", price: 60 }, "铁甲": { item: "铁甲", price: 120 }
+            };
+            
+            const target = buyTargets[itemName];
+            if (!target) { log('system', '无此物。可购买：干粮、酒肉、武器、防具。'); return; }
+            if (player.silver < target.price) { log('combat', '银两不足！需' + target.price + '文。'); return; }
+            
+            player.silver -= target.price;
+            player.inventory[target.item] = (player.inventory[target.item] || 0) + 1;
+            log('success', '购得' + target.item + '，花费' + target.price + '文。');
+        }
+
+        function eatFood(foodName) {
+            const foods = { "干粮": 20, "酒肉": 50 };
+            let targetFood = null;
+            for (const [name, value] of Object.entries(foods)) {
+                if ((foodName && foodName.includes(name)) || !foodName) {
+                    if (player.inventory[name] > 0) { targetFood = { name: name, value: value }; break; }
+                }
+            }
+            if (!targetFood) { log('system', '行囊中无充饥之物。'); return; }
+            
+            player.inventory[targetFood.name]--;
+            player.food = Math.min(player.food + targetFood.value, 100);
+            log('success', '食' + targetFood.name + '，粮草+' + targetFood.value);
+        }
+
+        function fight(target) {
+            log('combat', '─── 战斗 ───');
+            const enemyPower = 10 + Math.floor(Math.random() * 15);
+            const myPower = player.attack + Math.floor(Math.random() * 10);
+            log('combat', '敌人袭来！');
+            
+            if (myPower >= enemyPower) {
+                const gain = 5 + Math.floor(Math.random() * 10);
+                player.silver += gain;
+                log('success', '敌人败退！缴获银两' + gain + '文');
+            } else {
+                const loss = 10 + Math.floor(Math.random() * 10);
+                player.food = Math.max(0, player.food - loss);
+                log('combat', '败退，损失粮草' + loss);
+            }
+            showScene();
+        }
+
+        function rest() {
+            log('system', '─── 休息 ───');
+            log('narrative', '寻一安全之处，歇息片刻...');
+            const recover = 20 + Math.floor(Math.random() * 10);
+            player.food = Math.min(player.food + recover, 100);
+            log('success', '粮草恢复了' + recover);
+            showScene();
+        }
+
+        function saveGame() {
+            try { localStorage.setItem('sanguo_save', JSON.stringify({ player: player, date: new Date().toLocaleString() })); log('success', '💾 存档成功！'); } catch (e) { log('system', '存档失败'); }
+        }
+        
+        function loadGame() {
+            try {
+                const data = localStorage.getItem('sanguo_save');
+                if (data) { player = JSON.parse(data).player; log('success', '📂 读档成功！'); showScene(); }
+                else { log('system', '无存档记录'); }
+            } catch (e) { log('system', '读档失败'); }
+        }
+
+        function showHelp() {
+            log('system', '─── 可用指令 ───');
+            log('hint', '▸ 移动：去/前往/到 + 地点');
+            log('hint', '▸ 探索：探索/探查/搜寻/看看');
+            log('hint', '▸ 问答：局势如何？/ 曹操是谁？/ 这里是哪？');
+            log('hint', '▸ 查看：状态/背包');
+            log('hint', '▸ 战斗：战斗/打/杀');
+            log('hint', '▸ 交易：买/卖 + 物品');
+            log('hint', '▸ 其他：休息/存档/帮助');
+        }
+
+        window.onload = function() { console.log("游戏启动中..."); };
+    </script>
+</body>
+</html>
