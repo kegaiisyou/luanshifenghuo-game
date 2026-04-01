@@ -1494,7 +1494,7 @@
             if (player.goods[g] > 0) {
                 hasGoods = true;
                 var basePrice = GOODS[g] ? GOODS[g].basePrice : 10;
-                var priceMod = hub && hub.specialty === g ? hub.priceBonus : (hub && hub.demand === g ? 1/hub.priceBonus : 1);
+                var priceMod = hub && hub.demand === g ? hub.priceBonus : (hub && hub.specialty === g ? 1/hub.priceBonus : 1);
                 var sellPrice = Math.round(basePrice * priceMod);
                 log("  " + g + " ×" + player.goods[g] + " → 可售 " + sellPrice + "银/个", "normal");
             }
@@ -2406,7 +2406,7 @@
             if (player.goods[g] > 0) {
                 hasGoods = true;
                 var basePrice = GOODS[g] ? GOODS[g].basePrice : 10;
-                var priceMod = hub && hub.specialty === g ? hub.priceBonus : (hub && hub.demand === g ? 1/hub.priceBonus : 1);
+                var priceMod = hub && hub.demand === g ? hub.priceBonus : (hub && hub.specialty === g ? 1/hub.priceBonus : 1);
                 var sellPrice = Math.round(basePrice * priceMod * (1 + Math.random() * 0.2));
                 var isProfit = hub && hub.demand === g;
                 
@@ -2429,10 +2429,10 @@
         var buyHtml = "";
         for (var item in GOODS) {
             var basePrice = GOODS[item].basePrice;
-            var priceMod = hub && hub.demand === item ? hub.priceBonus : (hub && hub.specialty === item ? 1/hub.priceBonus : 1);
+            var priceMod = hub && hub.specialty === item ? 1/hub.priceBonus : (hub && hub.demand === item ? hub.priceBonus : 1);
             var buyPrice = Math.round(basePrice * priceMod * (1 + Math.random() * 0.1));
             var canAfford = player.silver >= buyPrice;
-            var isCheap = hub && hub.demand === item;
+            var isCheap = hub && hub.specialty === item;
             
             buyHtml += '<div class="item-row">';
             buyHtml += '<div><span style="color:#c4b49c">' + item + '</span>';
@@ -2471,7 +2471,8 @@
         
         var hub = TRADE_HUBS[player.location];
         var basePrice = GOODS[goods] ? GOODS[goods].basePrice : 10;
-        var priceMod = hub && hub.specialty === goods ? hub.priceBonus : (hub && hub.demand === goods ? 1/hub.priceBonus : 1);
+        // 卖货：需求城市急需货物所以高价收购，特产城市当地充足所以低价收购
+        var priceMod = hub && hub.demand === goods ? hub.priceBonus : (hub && hub.specialty === goods ? 1/hub.priceBonus : 1);
         var sellPrice = Math.round(basePrice * priceMod);
         
         player.goods[goods]--;
@@ -2506,7 +2507,8 @@
         }
         
         var basePrice = GOODS[goods].basePrice;
-        var priceMod = hub && hub.demand === goods ? hub.priceBonus : (hub && hub.specialty === goods ? 1/hub.priceBonus : 1);
+        // 买货：特产城市当地货多便宜，需求城市当地货少贵
+        var priceMod = hub && hub.specialty === goods ? 1/hub.priceBonus : (hub && hub.demand === goods ? hub.priceBonus : 1);
         var buyPrice = Math.round(basePrice * priceMod);
         
         if (player.silver < buyPrice) {
