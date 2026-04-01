@@ -1,0 +1,2712 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三国：乱世烽火 - 完整版</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", sans-serif; background: linear-gradient(180deg, #1a1a2e 0%, #0a0a15 100%); color: #e8dcc4; padding: 12px; max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        h1 { color: #d4af37; text-align: center; margin: 15px 0; font-size: 1.4rem; }
+        
+        /* 开始界面 */
+        .intro-text { font-size: 0.9rem; line-height: 1.8; color: #c4b49c; text-align: center; padding: 10px; }
+        
+        /* 选择按钮 */
+        .select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+        .select-btn { padding: 12px; background: linear-gradient(135deg, #1a1520, #2a1a10); border: 2px solid #3a2a1a; border-radius: 8px; color: #c4b49c; cursor: pointer; text-align: left; transition: all 0.2s; }
+        .select-btn:hover { border-color: #d4af37; transform: translateY(-2px); }
+        .select-btn.selected { border-color: #d4af37; background: linear-gradient(135deg, #2a2015, #3a2a1a); }
+        .select-name { color: #d4af37; font-weight: bold; font-size: 0.95rem; }
+        .select-desc { font-size: 0.7rem; color: #8a7a6a; margin-top: 3px; }
+        
+        /* 角色选择 */
+        .role-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 10px 0; }
+        .role-btn { padding: 10px; background: #1a1520; border: 2px solid #3a2a1a; border-radius: 8px; color: #c4b49c; cursor: pointer; text-align: center; transition: all 0.2s; }
+        .role-btn:hover { border-color: #d4af37; }
+        .role-btn.selected { border-color: #d4af37; background: #2a2015; }
+        
+        /* 主游戏区域 */
+        #mainPanel { display: none; }
+        
+        /* 状态栏 */
+        .status-bar { display: flex; flex-wrap: wrap; justify-content: space-between; background: #1a1520; padding: 8px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #3a2a1a; gap: 6px; }
+        .status-item { text-align: center; min-width: 40px; }
+        .status-label { font-size: 0.6rem; color: #8a7a6a; }
+        .status-value { color: #d4af37; font-weight: bold; font-size: 0.8rem; }
+        
+        /* 信息栏 */
+        .info-bar { display: flex; justify-content: space-between; font-size: 0.75rem; color: #8a7a6a; margin-bottom: 8px; padding: 8px; background: #0f0a08; border-radius: 6px; }
+        
+        /* 任务栏 */
+        .quest-bar { background: linear-gradient(135deg, #1a1520, #2a1a10); border: 1px solid #4a3a20; border-radius: 8px; padding: 8px; margin-bottom: 8px; }
+        .quest-title { color: #d4af37; font-size: 0.8rem; }
+        
+        /* 游戏日志 */
+        #gameLog { background: #0f0a08; padding: 10px; height: 200px; overflow-y: auto; border-radius: 8px; margin-bottom: 8px; border: 1px solid #2a1a10; font-size: 0.85rem; }
+        .log-msg { margin-bottom: 8px; line-height: 1.5; }
+        
+        /* 目的地选择面板 */
+        #destinationPanel { display: none; background: #0f0a08; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 2px solid #d4af37; }
+        .dest-title { color: #d4af37; font-size: 1rem; text-align: center; margin-bottom: 10px; }
+        .dest-current { font-size: 0.8rem; color: #8a7a6a; text-align: center; margin-bottom: 10px; }
+        .dest-travel-info { font-size: 0.72rem; color: #9ab87a; text-align: left; margin-bottom: 8px; padding: 8px; background: #1a2510; border-radius: 4px; white-space: pre-line; line-height: 1.6; }
+        .dest-section { margin-bottom: 12px; }
+        .dest-section-title { color: #7a9acd; font-size: 0.8rem; margin-bottom: 6px; border-bottom: 1px solid #2a1a10; padding-bottom: 3px; }
+        .dest-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+        .dest-btn { padding: 8px 12px; background: #1a1520; border: 1px solid #3a2a1a; border-radius: 6px; color: #c4b49c; font-size: 0.8rem; cursor: pointer; }
+        .dest-btn:hover { border-color: #d4af37; color: #d4af37; }
+        .dest-btn.nearby { border-color: #4a6a4a; color: #9ab87a; }
+        .dest-btn.nearby:hover { background: #2a3020; }
+        .dest-btn.far { border-color: #8b4513; }
+        .dest-btn.stage { border-color: #6a5080; color: #b8a0d0; }
+        .dest-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .dest-close { width: 100%; padding: 10px; background: #2a2015; border: 1px solid #3a2a1a; color: #8a7a6a; border-radius: 6px; cursor: pointer; margin-top: 10px; }
+        
+        /* 快捷按钮 */
+        .quick-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+        .qbtn { padding: 7px 10px; background: #1a1520; border: 1px solid #3a2a1a; border-radius: 5px; color: #8a7a6a; font-size: 0.75rem; cursor: pointer; }
+        .qbtn:hover { border-color: #8b4513; color: #d4af37; }
+        
+        /* 输入区域 */
+        .input-area { display: flex; gap: 6px; }
+        #commandInput { flex: 1; padding: 8px; background: #1a1520; color: #c4b49c; border: 1px solid #3a2a1a; border-radius: 6px; font-size: 0.85rem; }
+        #sendBtn { padding: 8px 12px; background: #8b4513; color: #d4af37; border: 1px solid #d4af37; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+        
+        /* 警告提示 */
+        .warning { color: #c97a7a; font-size: 0.75rem; text-align: center; margin: 8px 0; }
+        
+        /* 战斗/商店/背包面板 */
+        .panel { display: none; background: #0f0a08; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 2px solid #8b4513; }
+        .panel-title { color: #d4af37; font-size: 1rem; text-align: center; margin-bottom: 10px; }
+        .panel-close { width: 100%; padding: 10px; background: #2a2015; border: 1px solid #3a2a1a; color: #8a7a6a; border-radius: 6px; cursor: pointer; margin-top: 10px; }
+        
+        /* 物品列表 */
+        .item-row { display: flex; justify-content: space-between; padding: 8px; background: #1a1520; border-radius: 6px; margin-bottom: 6px; }
+        
+        /* 战斗按钮 */
+        .battle-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .battle-btn { padding: 12px; background: #2a1520; border: 1px solid #8b0000; border-radius: 6px; color: #c4b49c; cursor: pointer; }
+        
+        /* 天气显示 */
+        .weather-bar { display: flex; align-items: center; gap: 8px; padding: 6px; background: #1a1520; border-radius: 6px; margin-bottom: 8px; font-size: 0.75rem; }
+        .weather-icon { font-size: 1rem; }
+        .weather-text { color: #8a7a6a; }
+        
+        /* 环境介绍弹窗 */
+        #envPanel { display: none; background: #0f0a08; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 2px solid #4a6a4a; }
+        .env-title { color: #9ab87a; font-size: 1rem; text-align: center; margin-bottom: 10px; }
+        .env-desc { color: #c4b49c; font-size: 0.85rem; line-height: 1.8; margin-bottom: 12px; }
+        .env-npc { background: #1a2015; padding: 10px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #4a6a4a; }
+        .env-npc-name { color: #9ab87a; font-size: 0.8rem; font-weight: bold; }
+        .env-npc-text { color: #a0a0a0; font-size: 0.8rem; font-style: italic; margin-top: 4px; }
+        .env-yell { background: #201510; padding: 8px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #8b4513; }
+        .env-yell-text { color: #c4a060; font-size: 0.8rem; }
+        
+        /* 坐骑显示 */
+        .mount-info { color: #b8a0d0; font-size: 0.7rem; }
+    </style>
+</head>
+<body>
+    <h1>三國：亂世烽火</h1>
+    
+    <!-- 开始界面 -->
+    <div id="startPanel">
+        <div class="intro-text">
+            东风忽起，垂杨舞回。<br>
+            恍惚间，耳边似有金戈铁马之声...<br><br>
+            待睁眼时，却见自己立于<br>
+            古道荒郊，黄沙漫天...<br><br>
+            <strong style="color:#d4af37;">乱世已起，公子何为？</strong>
+        </div>
+        
+        <button id="startBtn" style="width:100%;padding:15px;background:#8b4513;color:#d4af37;border:2px solid #d4af37;border-radius:8px;font-size:1.1rem;cursor:pointer;margin-top:20px;">踏入乱世</button>
+    </div>
+    
+    <!-- 主游戏面板 -->
+    <div id="mainPanel">
+        <!-- 天气显示 -->
+        <div class="weather-bar">
+            <span class="weather-icon" id="weatherIcon">☀️</span>
+            <span class="weather-text" id="weatherText">天气：晴朗</span>
+            <span class="mount-info" id="mountInfo"></span>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status-item"><div class="status-label">武力</div><div class="status-value" id="atk">10</div></div>
+            <div class="status-item"><div class="status-label">智力</div><div class="status-value" id="int">10</div></div>
+            <div class="status-item"><div class="status-label">生命</div><div class="status-value" id="hp">100</div></div>
+            <div class="status-item"><div class="status-label">干粮</div><div class="status-value" id="rations">50</div></div>
+            <div class="status-item"><div class="status-label">银两</div><div class="status-value" id="silver">10</div></div>
+            <div class="status-item"><div class="status-label">名望</div><div class="status-value" id="fame">0</div></div>
+        </div>
+        
+        <div class="info-bar">
+            <span id="timeInfo">189年 春</span>
+            <span id="locationInfo">洛阳</span>
+        </div>
+        
+        <div class="quest-bar">
+            <div class="quest-title" id="questTitle">● 当前任务：无</div>
+        </div>
+        
+        <div id="gameLog"></div>
+        
+        <!-- 快捷按钮 -->
+        <div class="quick-btns">
+            <button class="qbtn" data-action="openDestination">📍 前往</button>
+            <button class="qbtn" data-action="explore">🔍 探索</button>
+            <button class="qbtn" data-action="askInfo">📢 打探</button>
+            <button class="qbtn" data-action="showEnvironment">🏞️ 环境</button>
+            <button class="qbtn" data-action="openInventory">🎒 背包</button>
+            <button class="qbtn" data-action="showStatus">📊 状态</button>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="commandInput" placeholder="输入指令或问题...">
+            <button id="sendBtn">确定</button>
+        </div>
+    </div>
+    
+    <!-- 目的地选择面板 -->
+    <div id="destinationPanel">
+        <div class="dest-title">📍 前往何处</div>
+        <div class="dest-current" id="destCurrent"></div>
+        <div class="dest-travel-info" id="travelInfo"></div>
+        <div id="destContent"></div>
+        <button class="dest-close" data-action="closeDestination">返回游戏</button>
+    </div>
+    
+    <!-- 地图面板 -->
+    <div id="mapPanel" class="panel" style="border-color:#4a6a4a;">
+        <div class="panel-title">🗺️ 天下地图</div>
+        <div id="mapContent" style="font-family:monospace;font-size:0.65rem;line-height:1.3;color:#8a7a6a;white-space:pre;"></div>
+        <button class="panel-close" data-action="closeMap">关闭</button>
+    </div>
+    
+    <!-- 商店面板 -->
+    <div id="shopPanel" class="panel">
+        <div class="panel-title">🏪 商店</div>
+        <div id="shopItems"></div>
+        <button class="panel-close" data-action="closeShop">关闭</button>
+    </div>
+    
+    <!-- 贸易面板 -->
+    <div id="tradePanel" class="panel" style="border-color:#d4af37;">
+        <div class="panel-title">💰 商贸市场</div>
+        <div id="tradeInfo"></div>
+        <div id="tradeItems"></div>
+        <button class="panel-close" data-action="closeTrade">关闭</button>
+    </div>
+    
+    <!-- 背包面板 -->
+    <div id="inventoryPanel" class="panel" style="border-color:#6a5080;">
+        <div class="panel-title">🎒 背包</div>
+        <div id="invItems"></div>
+        <button class="panel-close" data-action="closeInventory">关闭</button>
+    </div>
+    
+    <!-- 环境介绍面板 -->
+    <div id="envPanel">
+        <div class="env-title" id="envTitle">🏞️ 环境介绍</div>
+        <div class="env-desc" id="envDesc"></div>
+        <div id="envContent"></div>
+        <button class="panel-close" data-action="closeEnvironment">返回游戏</button>
+    </div>
+    
+    <!-- 战斗面板 -->
+    <div id="battlePanel" class="panel" style="border-color:#8b0000;">
+        <div class="panel-title">⚔️ 战斗</div>
+        <div style="text-align:center;margin-bottom:10px;">
+            <div style="color:#c97a7a;font-weight:bold;" id="enemyName">敌人</div>
+            <div style="color:#c97a7a;">HP: <span id="enemyHp">50</span></div>
+        </div>
+        <div style="color:#8acd7a;text-align:center;margin-bottom:10px;">
+            你: <span id="playerHp">100</span>/<span id="playerMaxHp">100</span>
+        </div>
+        <div class="battle-btns">
+            <button class="battle-btn" data-action="battle" data-param="attack">攻击</button>
+            <button class="battle-btn" data-action="battle" data-param="defend">防御</button>
+            <button class="battle-btn" data-action="battle" data-param="skill">技能</button>
+            <button class="battle-btn" data-action="battle" data-param="flee">逃跑</button>
+        </div>
+    </div>
+
+    <script>
+    // ==================== 游戏数据 ====================
+    const WEATHER_TYPES = [
+        { name: "晴朗", icon: "☀️", speedMod: 1.0, desc: "风和日丽，适合赶路" },
+        { name: "多云", icon: "⛅", speedMod: 0.9, desc: "天色阴沉，行路稍缓" },
+        { name: "阴天", icon: "☁️", speedMod: 0.85, desc: "乌云密布，道路难行" },
+        { name: "小雨", icon: "🌧️", speedMod: 0.7, desc: "细雨绵绵，道路泥泞" },
+        { name: "大雨", icon: "⛈️", speedMod: 0.5, desc: "暴雨如注，寸步难行" },
+        { name: "小雪", icon: "🌨️", speedMod: 0.6, desc: "雪花飘飘，路滑难行" },
+        { name: "大雪", icon: "❄️", speedMod: 0.4, desc: "大雪封山，难以通行" },
+        { name: "大风", icon: "💨", speedMod: 0.7, desc: "狂风大作，步履维艰" },
+        { name: "雾", icon: "🌫️", speedMod: 0.6, desc: "大雾弥漫，辨不清方向" },
+        { name: "沙尘", icon: "🌪️", speedMod: 0.5, desc: "黄沙漫天，眯眼难睁" }
+    ];
+    
+    const ROAD_TYPES = {
+        "官道": { baseSpeed: 1.0, rationsPerDay: 1, desc: "平坦宽阔的官道，快马加鞭一日千里", color: "#9ab87a" },
+        "山路": { baseSpeed: 0.6, rationsPerDay: 2, desc: "崎岖难行的山路，行进缓慢", color: "#c4a060" },
+        "水路": { baseSpeed: 1.2, rationsPerDay: 1, desc: "顺流而下，轻松惬意", color: "#6ab0d0" },
+        "荒野": { baseSpeed: 0.4, rationsPerDay: 3, desc: "荒无人烟的野外，危机四伏", color: "#a08060" },
+        "小道": { baseSpeed: 0.5, rationsPerDay: 2, desc: "隐秘小道，人迹罕至", color: "#7a9acd" }
+    };
+    
+    // 道路状态
+    const ROAD_STATUS = {
+        "畅通": { icon: "🟢", desc: "道路畅通，商旅络绎不绝", riskMod: 0.2 },
+        "崎岖": { icon: "🟡", desc: "年久失修，道路难行", riskMod: 0.5 },
+        "封锁": { icon: "🔴", desc: "战乱封锁，禁止通行", riskMod: 1.0, blocked: true },
+        "危险": { icon: "⚠️", desc: "盗匪出没，行路需谨慎", riskMod: 0.8 }
+    };
+    
+    // 统治者性格（影响治安和商旅）
+    const RULER_STYLES = {
+        "仁德": { name: "仁德", icon: "💚", tax: 0, escort: true, desc: "治下安宁，夜不闭户，路不拾遗" },
+        "严明": { name: "严明", icon: "💙", tax: 5, escort: false, desc: "法度严明，秩序井然" },
+        "中庸": { name: "中庸", icon: "💛", tax: 10, escort: false, desc: "治理平平，商旅正常" },
+        "贪婪": { name: "贪婪", icon: "🟠", tax: 25, escort: false, desc: "苛捐杂税，商旅苦不堪言" },
+        "残暴": { name: "残暴", icon: "🔴", tax: 50, escort: false, desc: "烧杀抢掠，商旅视为畏途", danger: true }
+    };
+    
+    // 势力性格配置
+    const FACTION_RULERS = {
+        "刘备": { style: "仁德", name: "刘备", desc: "刘皇叔以仁义著称" },
+        "孙权": { style: "严明", name: "孙权", desc: "江东之主，治国有方" },
+        "曹操": { style: "严明", name: "曹操", desc: "乱世奸雄，治军严谨" },
+        "袁绍": { style: "中庸", name: "袁绍", desc: "四世三公，优柔寡断" },
+        "袁术": { style: "贪婪", name: "袁术", desc: "野心勃勃，贪婪无度" },
+        "董卓": { style: "残暴", name: "董卓", desc: "废帝专权，残暴不仁" },
+        "流浪": { style: "中庸", name: "无", desc: "此地暂无固定统治者" }
+    };
+    
+    // 交通工具（添加载重）
+    const MOUNTS = {
+        "无": { speedMod: 1.0, name: "步行", desc: "徒步而行", capacity: 10, price: 0 },
+        "骏马": { speedMod: 1.5, name: "骏马", desc: "日行千里，可载少量货物", capacity: 30, price: 150 },
+        "战马": { speedMod: 1.3, name: "战马", desc: "战马难寻，可载少量货物", capacity: 25, price: 200 },
+        "骡车": { speedMod: 0.8, name: "骡车", desc: "缓慢但载货多", capacity: 100, price: 50 },
+        "驴车": { speedMod: 0.7, name: "驴车", desc: "便宜实用，载货一般", capacity: 80, price: 30 },
+        "马车": { speedMod: 0.9, name: "马车", desc: "商队常用，载货颇多", capacity: 150, price: 100 },
+        "快船": { speedMod: 1.6, name: "快船", desc: "顺江而下，载货一般", capacity: 80, price: 180 }
+    };
+    
+    // 货物类型（添加重量和利润）
+    const GOODS = {
+        "粮食": { weight: 2, basePrice: 10, desc: "民生必需，各地需求稳定" },
+        "布匹": { weight: 3, basePrice: 20, desc: "商贾必备，利润可观" },
+        "盐": { weight: 1, basePrice: 15, desc: "生活必需品，官府管控" },
+        "铁器": { weight: 5, basePrice: 40, desc: "农具武器，利润丰厚" },
+        "药材": { weight: 2, basePrice: 30, desc: "治病救人，需求稳定" },
+        "茶叶": { weight: 1, basePrice: 25, desc: "文人雅士喜爱" },
+        "丝绸": { weight: 1, basePrice: 80, desc: "高档货物，利润最高" },
+        "牲畜": { weight: 10, basePrice: 50, desc: "活物难运，但利润不错" },
+        "瓷器": { weight: 4, basePrice: 60, desc: "易碎品，需小心运输" }
+    };
+    
+    // 商会配置（各地特产和需求）
+    const TRADE_HUBS = {
+        "洛阳": { specialty: "丝绸", demand: "粮食", priceBonus: 1.2 },
+        "许昌": { specialty: "铁器", demand: "布匹", priceBonus: 1.1 },
+        "寿春": { specialty: "盐", demand: "铁器", priceBonus: 1.3 },
+        "沛县": { specialty: "粮食", demand: "布匹", priceBonus: 1.0 },
+        "下邳": { specialty: "布匹", demand: "粮食", priceBonus: 1.0 },
+        "长安": { specialty: "丝绸", demand: "药材", priceBonus: 1.1 },
+        "新野": { specialty: "茶叶", demand: "盐", priceBonus: 1.0 },
+        "建业": { specialty: "瓷器", demand: "粮食", priceBonus: 1.2 },
+        "冀州": { specialty: "牲畜", demand: "茶叶", priceBonus: 1.1 },
+        "徐州": { specialty: "粮食", demand: "盐", priceBonus: 1.0 }
+    };
+    
+    const LOCATIONS = {
+        "洛阳": { 
+            type: "都城", region: "司州", faction: "董卓", shop: true, stage: true, road: "官道",
+            desc: "东汉京都，繁华似锦却是是非之地",
+            envDesc: "洛阳城巍峨壮观，城墙高耸。街道宽阔整洁，两侧店铺林立。城中有皇宫、未央宫遗址，铜雀台园林胜景。",
+            nearby: ["许昌", "长安", "新野", "南阳"],
+            places: {
+                "皇宫": { type: "宫廷", desc: "天子居所", env: "金瓦红墙，殿宇巍峨。禁军守卫森严，宫中之人行色匆匆。" },
+                "铜雀台": { type: "风景", desc: "园林胜景", env: "亭台楼阁错落有致，池水清澈见底。杨柳拂岸，奇石嶙峋。" },
+                "集市": { type: "坊市", desc: "商贾云集", env: "街道两旁摆满了摊位，吆喝声此起彼伏。" },
+                "官署": { type: "官府", desc: "政令传达之处", env: "府衙大门紧闭，台阶上摆放着鸣冤鼓。" },
+                "城门": { type: "关隘", desc: "守卫森严", env: "城门高大坚固，士兵披甲执戈，严阵以待。" },
+                "客栈": { type: "驿站", desc: "旅客歇息", env: "客栈门口挑着酒旗，店内人声鼎沸。" },
+                "军需库": { type: "军事", desc: "军用物资", env: "军需官正在清点粮草辎重。" },
+                "兵营": { type: "练兵场", desc: "军队驻扎", env: "校场之上，士兵列阵操练，喊声震天。" }
+            },
+            npcs: [
+                { name: "老商户", text: "如今这世道，生意是越来越难做了..." },
+                { name: "书生", text: "在下欲赴长安求学，不知路况如何？" },
+                { name: "衙役", text: "近日城中戒严！" },
+                { name: "军需官", text: "要补充粮草？请到军需库来。" }
+            ],
+            yells: ["卖布嘞！", "炊饼！", "包子！", "胭脂水粉！", "磨刀！"]
+        },
+        "许昌": { 
+            type: "名城", region: "豫州", faction: "流浪", shop: true, stage: true, road: "官道",
+            desc: "曹操根基，四战之地，商贸繁荣",
+            envDesc: "许昌城虽不如洛阳繁华，却也是北方重镇。街道整齐，商贾往来频繁。",
+            nearby: ["洛阳", "新野", "徐州", "南阳"],
+            places: {
+                "府衙": { type: "官府", desc: "曹操议事之所", env: "大堂之上，曹操正与谋士商议军机大事。" },
+                "军营": { type: "练兵场", desc: "魏军训练之地", env: "校场之上，士兵列阵操练，喊声震天。" },
+                "军需库": { type: "军事", desc: "军用物资", env: "粮草堆满仓库，辎重车辆整齐停放。" },
+                "街市": { type: "坊市", desc: "热闹非凡", env: "街道狭窄但繁华，店铺鳞次栉比。" },
+                "书院": { type: "学堂", desc: "文人聚集", env: "书院幽静，青砖灰瓦，院中种着翠竹。" }
+            },
+            npcs: [
+                { name: "曹兵", text: "丞相有令，加强城中戒备！" },
+                { name: "商人", text: "许昌是个好地方，商机无限啊！" },
+                { name: "军需官", text: "曹丞相治军严谨，粮草先行。" }
+            ],
+            yells: ["糖葫芦！", "修鞋！", "茶水！"]
+        },
+        "长安": { 
+            type: "都城", region: "司州", faction: "董卓", shop: true, stage: true, road: "官道",
+            desc: "汉室旧都，董卓霸据于此",
+            envDesc: "长安城破败不堪，城墙虽有当年风范，却显颓势。董卓入城后，烧杀抢掠，昔日繁华不再。",
+            nearby: ["洛阳", "兰州", "汉中"],
+            places: {
+                "未央宫": { type: "宫廷", desc: "皇宫遗址", env: "曾经辉煌的宫殿如今满目疮痍，杂草丛生。" },
+                "城墙": { type: "关隘", desc: "巍峨壮观", env: "城墙高大坚固，虽历经战火，却依然屹立。" },
+                "市集": { type: "坊市", desc: "西北贸易中心", env: "市集萧条，摊位稀疏。" },
+                "兵营": { type: "练兵场", desc: "董卓军驻地", env: "军营中士兵横冲直撞，纪律涣散。" },
+                "军需库": { type: "军事", desc: "军用物资", env: "仓库中粮草充足，但管理混乱。" }
+            },
+            npcs: [
+                { name: "百姓", text: "董卓这恶魔...唉，敢怒不敢言啊..." },
+                { name: "西凉兵", text: "滚滚滚，别挡道！" }
+            ],
+            yells: ["卖酒！", "羊肉串！"]
+        },
+        "新野": { 
+            type: "要地", region: "荆州", faction: "刘备", shop: true, stage: true, road: "山路",
+            desc: "荆州北部门户，刘备暂居于此",
+            envDesc: "新野是一座小城，却因刘备的到来而备受关注。城中百姓质朴，街道整洁有序。",
+            nearby: ["洛阳", "许昌", "南阳", "襄阳"],
+            places: {
+                "府邸": { type: "庭院", desc: "刘备落脚之处", env: "府邸不大，却收拾得干净整洁。" },
+                "校场": { type: "练兵场", desc: "演练武艺", env: "校场之上，关羽正在指点士兵武艺。" },
+                "民居": { type: "农家", desc: "百姓人家", env: "普通百姓的宅院，简陋但温馨。" },
+                "田间": { type: "田野", desc: "稻麦飘香", env: "金黄色的麦浪翻滚，远处可见村庄的炊烟。" },
+                "军需库": { type: "军事", desc: "军用物资", env: "军需官正在登记粮草收支。" }
+            },
+            npcs: [
+                { name: "老农", text: "刘皇叔真是仁义啊！" },
+                { name: "青年", text: "我要投军！跟着刘皇叔打天下！" }
+            ],
+            yells: ["卖鱼！", "蔬菜！"]
+        },
+        "南阳": { 
+            type: "名城", region: "荆州", faction: "流浪", shop: true, stage: true, road: "官道",
+            desc: "诸葛躬耕地，人杰地灵",
+            envDesc: "南阳自古便是人杰地灵之地，山清水秀，景色宜人。隆中更是卧龙诸葛亮的隐居之所。",
+            nearby: ["洛阳", "许昌", "新野", "襄阳"],
+            places: {
+                "隆中": { type: "茅庐", desc: "诸葛亮隐居之地", env: "山清水秀，竹林深处有茅草屋数间。" },
+                "田野": { type: "田野", desc: "肥沃良田", env: "田埂交错，稻花飘香。" },
+                "山村": { type: "农家", desc: "山民聚居", env: "山村依山而建，炊烟袅袅。" },
+                "祠堂": { type: "建筑", desc: "祭祀先贤", env: "祠堂古朴庄重，香火不断。" }
+            },
+            npcs: [
+                { name: "樵夫", text: "隆中住着一位卧龙先生！" },
+                { name: "学子", text: "我欲拜卧龙先生为师..." }
+            ],
+            yells: ["山货！", "野果！"]
+        },
+        "襄阳": { 
+            type: "名城", region: "荆州", faction: "流浪", shop: true, stage: true, road: "水路",
+            desc: "荆州重镇，北抗曹操",
+            envDesc: "襄阳依汉水而建，是南北交通要冲。城墙坚固，地理位置重要。",
+            nearby: ["新野", "南阳", "江陵"],
+            places: {
+                "郡守府": { type: "官府", desc: "襄阳太守治所", env: "府衙大门敞开，衙役分立两旁。" },
+                "码头": { type: "坊市", desc: "水陆交通枢纽", env: "码头繁忙，船来船往。" },
+                "江边": { type: "风景", desc: "江天一色", env: "汉江水清澈见底，渔舟唱晚。" }
+            },
+            npcs: [
+                { name: "船夫", text: "要过江吗？价格公道！" },
+                { name: "渔夫", text: "今天收获不错！" }
+            ],
+            yells: ["过江！", "鱼！", "米酒！"]
+        },
+        "冀州": { 
+            type: "要地", region: "冀州", faction: "袁绍", shop: true, stage: true, road: "官道",
+            desc: "袁绍根基，兵多地广",
+            envDesc: "冀州是袁绍的老巢，城池坚固，兵多将广。城中一派繁荣景象。",
+            nearby: ["涿郡", "邺城", "平原"],
+            places: {
+                "州牧府": { type: "官府", desc: "袁绍议事厅", env: "大厅之上，袁绍高坐主位。" },
+                "校场": { type: "练兵场", desc: "河北军练兵", env: "校场宽阔，士兵训练有素。" },
+                "城墙": { type: "关隘", desc: "坚固城墙", env: "城墙高大坚固，防御工事完善。" },
+                "军需库": { type: "军事", desc: "军用物资", env: "粮草堆积如山，辎重充足。" }
+            },
+            npcs: [
+                { name: "袁兵", text: "主公说了，务必守住冀州！" },
+                { name: "谋士", text: "曹操诡计多端，不可轻敌啊..." }
+            ],
+            yells: ["炊饼！", "布料！"]
+        },
+        "涿郡": { 
+            type: "郡治", region: "幽州", faction: "刘备", shop: true, stage: false, road: "山路",
+            desc: "刘备故乡，幽州要地",
+            envDesc: "涿郡是刘备的故乡，民风淳朴。城中有著名的桃园，刘关张便是在此结义。",
+            nearby: ["冀州", "平原", "蓟城"],
+            places: {
+                "张飞庄": { type: "庭院", desc: "张飞故居", env: "庄子规模不小，院内摆满了酒坛。" },
+                "桃园": { type: "风景", desc: "刘关张结义之处", env: "桃花盛开，芳香扑鼻。" },
+                "田间": { type: "田野", desc: "北方农田", env: "北方田地一望无际，种植着小麦。" },
+                "山林": { type: "野外", desc: "山高林密", env: "山林茂密，时有野兽出没。" }
+            },
+            npcs: [
+                { name: "张飞", text: "俺老张最佩服的就是大哥和二哥！" },
+                { name: "村民", text: "刘皇叔是我们涿郡的骄傲！" }
+            ],
+            yells: ["猪肉！", "酒！"]
+        },
+        "邺城": { 
+            type: "名城", region: "冀州", faction: "袁绍", shop: true, stage: false, road: "官道",
+            desc: "袁绍治所，河北重镇",
+            envDesc: "邺城是袁绍的治所，城池宏伟，规模仅次于洛阳。",
+            nearby: ["冀州", "平原", "许昌"],
+            places: {
+                "宫殿": { type: "宫廷", desc: "袁绍宫室", env: "宫殿金碧辉煌，琉璃瓦闪闪发光。" },
+                "铜雀台": { type: "风景", desc: "遗址遗迹", env: "铜雀台已然破败，野草丛生。" }
+            },
+            npcs: [
+                { name: "官员", text: "冀州繁华，皆因袁公治理有方！" }
+            ],
+            yells: ["字画！", "古董！"]
+        },
+        "徐州": { 
+            type: "要地", region: "徐州", faction: "流浪", shop: true, stage: true, road: "官道",
+            desc: "陶谦治理，四战之地",
+            envDesc: "徐州是四战之地，交通发达，商业繁荣。陶谦治理有方，百姓安居乐道。",
+            nearby: ["许昌", "寿春", "下邳"],
+            places: {
+                "州府": { type: "官府", desc: "陶谦治所", env: "府衙庄重严肃，陶谦正在处理政务。" },
+                "坊市": { type: "坊市", desc: "商贾往来", env: "市集繁华，店铺鳞次栉比。" },
+                "镖局": { type: "镖局", desc: "威远镖局", env: "镖局门口刀枪林立，镖师们个个虎背熊腰。" },
+                "大客栈": { type: "客栈", desc: "四方客栈", env: "客栈里南来北往的商旅络绎不绝。" }
+            },
+            npcs: [
+                { name: "陶谦", text: "老夫年事已高，只求徐州百姓平安..." },
+                { name: "镖师", text: "保你货物平安，镖金五两一人！" },
+                { name: "商人", text: "徐州的生意真好做！" }
+            ],
+            yells: ["布料！", "珠宝！"],
+            hasTrade: true, hasBiaoju: true, hasWorkshop: true
+        },
+        "沛县": { 
+            type: "小城", region: "徐州", faction: "流浪", shop: false, stage: false, road: "山路",
+            desc: "刘邦故里，民风淳朴",
+            envDesc: "沛县是刘邦的故乡，虽然是小城，却人杰地灵。民风淳朴，百姓热情好客。",
+            nearby: ["徐州", "下邳", "寿春"],
+            places: {
+                "农户": { type: "农家", desc: "普通民居", env: "农家小院整洁温馨，院子里晒着谷物。" },
+                "田地": { type: "田野", desc: "沛县良田", env: "沛县土地肥沃，庄稼长势良好。" },
+                "大集": { type: "市集", desc: "五日一集", env: "集市上人头攒动，农产品、日用品应有尽有。" },
+                "茶摊": { type: "茶馆", desc: "乡间茶摊", env: "老农们在此歇脚喝茶，闲聊家常。" }
+            },
+            npcs: [
+                { name: "老农", text: "听说沛县出了个皇帝！" },
+                { name: "孩童", text: "我以后要像刘邦一样当皇帝！" },
+                { name: "货郎", text: "沛县虽小，五日一集倒也热闹！" }
+            ],
+            yells: ["农产品！", "柴火！"],
+            hasTrade: true, hasBiaoju: false, hasWorkshop: false
+        },
+        "下邳": {
+            type: "要地", region: "徐州", faction: "流浪", shop: true, stage: true, road: "山路",
+            desc: "徐州门户，兵家必争",
+            envDesc: "下邳是徐州重镇，地处南北要冲。城中商会林立，商旅频繁。",
+            nearby: ["徐州", "沛县", "寿春"],
+            places: {
+                "郡守府": { type: "官府", desc: "下邳太守治所", env: "府衙大门敞开，衙役分立两旁。" },
+                "商会": { type: "坊市", desc: "商会总部", env: "各地商人在此洽谈生意。" },
+                "镖局": { type: "镖局", desc: "振威镖局", env: "镖师们正在清点货物，准备押镖。" },
+                "客栈": { type: "驿站", desc: "南来北往", env: "客栈里汇聚了各地商旅。" }
+            },
+            npcs: [
+                { name: "商人", text: "下邳商会信誉卓著，交易公平！" },
+                { name: "账房", text: "要存放货物？我们有安全的仓库！" },
+                { name: "镖头", text: "乱世行商，没有护卫可不行！" }
+            ],
+            yells: ["布料！", "杂货！"],
+            hasTrade: true, hasBiaoju: true, hasWorkshop: false
+        },
+        "寿春": { 
+            type: "要地", region: "扬州", faction: "袁术", shop: true, stage: true, road: "水路",
+            desc: "淮南重镇，兵家必争",
+            envDesc: "寿春是淮南重镇，地处南北要冲。袁术占据此地，野心勃勃。",
+            nearby: ["许昌", "徐州", "建业"],
+            places: {
+                "王府": { type: "宫廷", desc: "袁术府邸", env: "王府豪华气派，府中美女如云。" },
+                "军营": { type: "练兵场", desc: "淮南军", env: "淮南军驻地，士兵们正在训练。" },
+                "渡口": { type: "坊市", desc: "水陆要冲", env: "渡口繁忙，大小船只停泊于此。" },
+                "庙会": { type: "庙会", desc: "城隍庙会", env: "庙会热闹非凡，香火鼎盛。" }
+            },
+            npcs: [
+                { name: "袁兵", text: "我主公才是真命天子！" },
+                { name: "商人", text: "寿春位置好，做生意赚钱！" },
+                { name: "庙祝", text: "求财求福，城隍爷灵验得很！" }
+            ],
+            yells: ["大米！", "盐！"],
+            hasTrade: true, hasBiaoju: true, hasWorkshop: true
+        },
+        "建业": { 
+            type: "名城", region: "扬州", faction: "孙权", shop: true, stage: true, road: "水路",
+            desc: "孙氏根基，江东中心",
+            envDesc: "建业濒临长江，水陆交通发达。孙权在此建立江东基业，城池坚固，百姓富庶。",
+            nearby: ["寿春", "吴郡"],
+            places: {
+                "孙府": { type: "庭院", desc: "孙权府邸", env: "孙府气势恢宏，墙上挂着江东地图。" },
+                "江边": { type: "风景", desc: "长江美景", env: "长江波涛汹涌，江面上船只穿梭。" },
+                "码头": { type: "坊市", desc: "水运繁忙", env: "码头繁忙异常，来自各地的商船在此停泊。" },
+                "军需库": { type: "军事", desc: "军用物资", env: "水军辎重充足，战船整齐排列。" }
+            },
+            npcs: [
+                { name: "周瑜", text: "江东之地，易守难攻！" },
+                { name: "渔夫", text: "今天打了满满一网鱼！" }
+            ],
+            yells: ["鱼鲜！", "丝绸！"]
+        },
+        "兰州": { 
+            type: "小城", region: "凉州", faction: "流浪", shop: true, stage: true, road: "荒野",
+            desc: "西北边陲，丝绸之路",
+            envDesc: "兰州地处西北边陲，是丝绸之路的重要节点。城池虽小，却汇聚了中原和西域的商人。",
+            nearby: ["长安", "武威"],
+            places: {
+                "城墙": { type: "关隘", desc: "边关要塞", env: "城墙雄伟，防御工事完善。" },
+                "客栈": { type: "驿站", desc: "丝路驿站", env: "客栈里汇聚了来自各地的商人。" },
+                "市集": { type: "坊市", desc: "胡汉交融", env: "市集上有中原的丝绸，也有西域的香料。" }
+            },
+            npcs: [
+                { name: "胡商", text: "丝绸之路，商机无限！" },
+                { name: "守将", text: "边关重地，闲人免进！" }
+            ],
+            yells: ["香料！", "葡萄酒！"]
+        },
+        "汉中": { 
+            type: "要地", region: "益州", faction: "流浪", shop: true, stage: false, road: "山路",
+            desc: "巴蜀门户，兵家必争",
+            envDesc: "汉中是进入巴蜀的门户，地势险要。栈道狭窄，一夫当关万夫莫开。",
+            nearby: ["长安", "成都"],
+            places: {
+                "郡府": { type: "官府", desc: "汉中太守", env: "郡府简陋，太守正在处理政务。" },
+                "栈道": { type: "关隘", desc: "出入蜀中要道", env: "栈道凿在悬崖之上，下面是万丈深渊。" },
+                "山林": { type: "野外", desc: "山高水长", env: "山高林密，流水潺潺。" }
+            },
+            npcs: [
+                { name: "守关兵", text: "蜀道难，难于上青天！" },
+                { name: "樵夫", text: "这山里的木头可好了！" }
+            ],
+            yells: ["山货！", "药材！"]
+        },
+        "泰山": { type: "风景", region: "徐州", faction: "流浪", road: "山路", desc: "五岳之首，祭祀圣地", envDesc: "泰山雄伟壮观，云海翻腾。登泰山而小天下。", nearby: ["徐州", "济南"],
+            npcs: [{ name: "道士", text: "泰山神灵，有求必应。" }],
+            yells: ["香烛！"] },
+        "华山": { type: "风景", region: "司州", faction: "流浪", road: "山路", desc: "奇险天下第一", envDesc: "华山险峻，悬崖峭壁随处可见。", nearby: ["长安", "洛阳"],
+            npcs: [{ name: "华山弟子", text: "华山险地，施主小心为上。" }],
+            yells: [] },
+        "山林": { type: "野外", region: "", faction: "流浪", road: "荒野", desc: "山高林密，常有强人出没", envDesc: "树林茂密，光线昏暗。时有毒蛇猛兽出没。", nearby: [],
+            npcs: [{ name: "强人", text: "此路是我开，此树是我栽..." }],
+            yells: [] },
+        "野外": { type: "野外", region: "", faction: "流浪", road: "荒野", desc: "荒郊野外，人迹罕至", envDesc: "荒凉的原野，杂草丛生。偶尔可见破败的村庄。", nearby: [],
+            npcs: [],
+            yells: [] }
+    };
+    
+    const SHOP_ITEMS = {
+        // 消耗品
+        "干粮": { price: 5, desc: "10份，个人探索必备", category: "消耗" },
+        "伤药": { price: 15, desc: "恢复30生命", category: "消耗" },
+        "药材": { price: 20, desc: "恢复20生命+智力", category: "消耗" },
+        "解毒药": { price: 25, desc: "解除中毒状态", category: "消耗" },
+        
+        // 装备
+        "铁剑": { price: 50, desc: "武力+5（永久）", category: "装备" },
+        "钢刀": { price: 120, desc: "武力+12（永久）", category: "装备" },
+        "布衣": { price: 30, desc: "生命上限+10", category: "装备" },
+        "皮甲": { price: 80, desc: "生命上限+25", category: "装备" },
+        "锁甲": { price: 150, desc: "生命上限+50", category: "装备" },
+        
+        // 坐骑
+        "骏马": { price: 150, desc: "速度+50%", mount: "骏马" },
+        "战马": { price: 200, desc: "速度+30%", mount: "战马" },
+        "骡车": { price: 50, desc: "速度-20%（可载货）", mount: "骡车" },
+        "快船": { price: 180, desc: "水路速度+60%", mount: "快船" },
+        
+        // 杂货
+        "雨具": { price: 20, desc: "雨季行军不受阻" },
+        "火折子": { price: 10, desc: "野外生火必备" },
+        "地图": { price: 30, desc: "显示未发现的城市" }
+    };
+    
+    // 物品分类颜色
+    const ITEM_COLORS = {
+        "消耗": "#8acd7a",
+        "装备": "#cd7a8a", 
+        "坐骑": "#b8a0d0",
+        "杂货": "#c4a060"
+    };
+    
+    const ENEMIES = [
+        { name: "流寇", hp: 30, atk: 8 },
+        { name: "山贼", hp: 50, atk: 12 },
+        { name: "黄巾余党", hp: 70, atk: 15 }
+    ];
+    
+    // 游戏状态
+    let player = {
+        faction: "流浪", role: "散人",
+        year: 189, month: 1, day: 1,
+        atk: 10, int: 10, hp: 100, maxHp: 100,
+        silver: 10, fame: 0,
+        location: "沛县", locationType: "城镇",
+        place: null,
+        discovered: ["沛县"],
+        rations: 80,   // 干粮：个人携带口粮
+        inventory: {}, // 背包物品（其他杂物）
+        goods: {},     // 货物（贸易用）
+        mount: null,   // 坐骑/交通工具
+        guard: 0,      // 护卫数量
+        weather: 0,
+        quest: null,
+        battle: null,
+        // 道路情报（探索后获得）
+        roadIntel: {}  // { "沛县-徐州": { status: "畅通", risk: 0.2, toll: 0 } }
+    };
+    
+    const monthNames = ["正", "二", "三", "四", "五", "六", "七", "八", "九", "十", "冬", "腊"];
+    const seasonNames = ["春", "夏", "秋", "冬"];
+    
+    // ==================== 事件委托绑定 ====================
+    document.addEventListener('DOMContentLoaded', function() {
+        // 开始游戏按钮
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        
+        // 发送按钮和输入框
+        document.getElementById('sendBtn').addEventListener('click', sendCmd);
+        document.getElementById('commandInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendCmd();
+        });
+        
+        // 快捷按钮（通过data-action）
+        document.querySelectorAll('.qbtn[data-action]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var action = btn.dataset.action;
+                if (typeof window[action] === 'function') {
+                    window[action]();
+                }
+            });
+        });
+        
+        // 面板关闭按钮
+        document.querySelectorAll('.panel-close[data-action]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var action = btn.dataset.action;
+                if (typeof window[action] === 'function') {
+                    window[action]();
+                }
+            });
+        });
+        
+        // 战斗按钮
+        document.querySelectorAll('.battle-btn[data-action]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var param = btn.dataset.param;
+                battleAction(param);
+            });
+        });
+        
+        // 目的地内容动态事件委托
+        document.getElementById('destContent').addEventListener('click', function(e) {
+            var target = e.target;
+            if (target.classList.contains('dest-btn') && !target.disabled) {
+                var onclick = target.getAttribute('data-fn');
+                if (onclick && typeof window[onclick] === 'function') {
+                    var param = target.getAttribute('data-param');
+                    window[onclick](param);
+                }
+            }
+        });
+        
+        // 目的地面板返回按钮
+        document.getElementById('destinationPanel').addEventListener('click', function(e) {
+            if (e.target.classList.contains('dest-close')) {
+                closeDestination();
+            }
+        });
+        
+        // 商店购买按钮（动态内容）
+        document.getElementById('shopItems').addEventListener('click', function(e) {
+            var target = e.target.closest('[data-buy]');
+            if (target) {
+                var item = target.dataset.buy;
+                var price = parseInt(target.dataset.price);
+                buyItem(item, price);
+            }
+        });
+        
+        // 背包物品点击（使用按钮）
+        document.getElementById('invItems').addEventListener('click', function(e) {
+            var target = e.target;
+            if (target && target.onclick) {
+                // 内联按钮已经被处理
+                return;
+            }
+        });
+        
+        console.log("游戏加载完成！");
+    });
+    
+    // ==================== 初始化函数 ====================
+    function startGame() {
+        player.faction = "流浪";
+        player.role = "散人";
+        player.location = "沛县";
+        player.discovered = ["沛县"];
+        player.year = 189;
+        player.month = 1;
+        player.day = 1;
+        player.atk = 10;
+        player.int = 10;
+        player.hp = 100;
+        player.maxHp = 100;
+        player.silver = 10;
+        player.rations = 80;
+        player.fame = 0;
+        player.inventory = { "伤药": 2 };
+        player.goods = {};     // 货物
+        player.mount = null;   // 坐骑
+        player.guard = 0;      // 护卫
+        player.weather = 0;
+        player.quest = null;
+        player.place = null;
+        player.roadIntel = {}; // 道路情报
+        
+        document.getElementById('startPanel').style.display = 'none';
+        document.getElementById('mainPanel').style.display = 'block';
+        
+        log("═══════════════════", "system");
+        log("公元" + player.year + "年 " + monthNames[player.month-1] + "月 " + player.day + "日", "system");
+        log("═══════════════════", "system");
+        log("您孤身一人，踏入这乱世之中...", "important");
+        log("当前位于：「沛县」", "success");
+        log(LOCATIONS[player.location].desc, "normal");
+        log("【提示】您随身携带" + player.rations + "份干粮，可用于探索或野外求生。", "item");
+        log("【提示】沛县是刘邦故里，盛产粮食，民风淳朴。", "item");
+        log("【提示】探索、打探消息可了解各地道路和治安情况。", "item");
+        
+        // 初始道路情报
+        initRoadIntel();
+        
+        updateWeather();
+        assignQuest();
+        updateUI();
+    }
+    
+    // 初始化道路情报
+    function initRoadIntel() {
+        // 沛县相邻道路的初始情报
+        var pexianNearby = ["徐州", "下邳", "寿春"];
+        pexianNearby.forEach(function(city) {
+            var roadKey = "沛县-" + city;
+            player.roadIntel[roadKey] = {
+                status: "畅通",
+                known: true,
+                desc: "商旅络绎不绝"
+            };
+        });
+    }
+    
+    // ==================== 天气系统 ====================
+    function updateWeather() {
+        var season = Math.floor((player.month - 1) / 3);
+        var baseWeather = [0, 2, 4, 6];
+        
+        if (Math.random() < 0.3) {
+            var base = baseWeather[season];
+            var offset = Math.floor(Math.random() * 3) - 1;
+            player.weather = Math.max(0, Math.min(WEATHER_TYPES.length - 1, base + offset));
+        }
+        
+        var w = WEATHER_TYPES[player.weather];
+        document.getElementById('weatherIcon').textContent = w.icon;
+        document.getElementById('weatherText').textContent = "天气：" + w.name;
+        
+        return w;
+    }
+    
+    // ==================== 核心功能 ====================
+    function log(text, type) {
+        type = type || "normal";
+        var colors = { normal: "#c4b49c", important: "#cd7a8a", success: "#8acd7a", combat: "#c97a7a", system: "#7a9acd", item: "#b8a0d0" };
+        var div = document.createElement('div');
+        div.className = "log-msg";
+        div.style.color = colors[type] || colors.normal;
+        div.innerHTML = text;
+        document.getElementById('gameLog').appendChild(div);
+        document.getElementById('gameLog').scrollTop = 9999;
+    }
+    
+    function updateUI() {
+        document.getElementById('atk').textContent = player.atk;
+        document.getElementById('int').textContent = player.int;
+        document.getElementById('hp').textContent = player.hp;
+        document.getElementById('rations').textContent = player.rations;
+        document.getElementById('silver').textContent = player.silver;
+        document.getElementById('fame').textContent = player.fame;
+        
+        var monthName = monthNames[player.month - 1];
+        document.getElementById('timeInfo').textContent = player.year + "年 " + monthName + "月 " + player.day + "日";
+        
+        var loc = LOCATIONS[player.location];
+        var locText = player.location;
+        if (player.place) locText += " · " + player.place;
+        document.getElementById('locationInfo').textContent = locText;
+        
+        // 坐骑信息
+        var mountInfo = player.mount ? " | 🐎 " + MOUNTS[player.mount].name : "";
+        document.getElementById('mountInfo').textContent = mountInfo;
+        
+        if (player.quest) {
+            document.getElementById('questTitle').textContent = "● " + player.quest.title;
+        }
+    }
+    
+    function sendCmd() {
+        var input = document.getElementById('commandInput');
+        var cmd = input.value.trim();
+        var cmdLower = cmd.toLowerCase();
+        if (!cmd) return;
+        input.value = "";
+        log("> " + cmd, "system");
+        
+        // 问句类 → 问答系统
+        if (cmdLower.includes("吗") || cmdLower.includes("呢") || cmdLower.includes("?") || cmdLower.includes("什么") || cmdLower.includes("谁") || cmdLower.includes("如何") || cmdLower.includes("怎么")) {
+            handleQA(cmdLower);
+        }
+        // 状态/属性 → 显示状态
+        else if (cmdLower.includes("状态") || cmdLower.includes("属性") || cmdLower.includes("看我") || cmdLower.includes("自己")) {
+            showStatus();
+        }
+        // 背包/物品/道具 → 背包面板
+        else if (cmdLower.includes("背包") || cmdLower.includes("物品") || cmdLower.includes("道具") || cmdLower.includes("包") || cmdLower.includes("干粮")) {
+            openInventory();
+        }
+        // 雇佣/镖局 → 雇佣护卫
+        else if (cmdLower.includes("雇佣") || cmdLower.includes("雇保镖") || cmdLower.includes("请保镖")) {
+            handleHireGuard(cmd);
+        }
+        // 解雇护卫
+        else if (cmdLower.includes("解散") || cmdLower.includes("解雇护卫")) {
+            handleHireGuard("解散");
+        }
+        // 行情/物价/市场 → 查看行情
+        else if (cmdLower.includes("行情") || cmdLower.includes("物价") || cmdLower.includes("市场")) {
+            var loc = LOCATIONS[player.location];
+            if (TRADE_HUBS[player.location]) {
+                showMarketDialog();
+            } else {
+                log("此处非市场，无法查看行情。", "system");
+            }
+        }
+        // 买交通工具
+        else if (cmdLower.includes("买马") || cmdLower.includes("买车") || cmdLower.includes("买船") || cmdLower.includes("买坐骑") || cmdLower.includes("购买马") || cmdLower.includes("购买车") || cmdLower.includes("购买船")) {
+            handleBuyMount(cmdLower);
+        }
+        // 买/卖 → 贸易（使用handleTradeCmd）
+        else if (cmdLower.includes("买") || cmdLower.includes("卖")) {
+            handleTradeCmd(cmdLower);
+        }
+        // 商店/坊市 → 根据地点显示对应功能
+        else if (cmdLower.includes("商店") || cmdLower.includes("坊市") || cmdLower.includes("大集") || cmdLower.includes("渡口")) {
+            var loc = LOCATIONS[player.location];
+            if (TRADE_HUBS[player.location]) {
+                showMarketDialog();
+            } else {
+                log("此处非市场，无法交易。", "system");
+            }
+        }
+        // 探索 → 探索
+        else if (cmdLower.includes("探索")) {
+            explore();
+        }
+        // 前往/移动/去 → 前往面板
+        else if (cmdLower.includes("前往") || cmdLower.includes("移动") || cmdLower.includes("去") || cmdLower.includes("走")) {
+            openDestination();
+        }
+        // 打探/消息 → 打探
+        else if (cmdLower.includes("打探") || cmdLower.includes("消息")) {
+            askInfo();
+        }
+        // 环境/这里/四周 → 环境介绍
+        else if (cmdLower.includes("环境") || cmdLower.includes("这里") || cmdLower.includes("四周")) {
+            showEnvironment();
+        }
+        // 使用/吃/喝/用 → 使用背包物品
+        else if (cmdLower.includes("使用") || cmdLower.includes("吃") || cmdLower.includes("喝") || cmdLower.includes("用")) {
+            // 识别具体物品
+            if (cmdLower.includes("伤药") || cmdLower.includes("药")) {
+                useItem("伤药");
+            } else if (cmdLower.includes("干粮")) {
+                useItem("干粮");
+            } else if (cmdLower.includes("药材")) {
+                useItem("药材");
+            } else {
+                log("请打开背包，选择要使用的物品。", "system");
+            }
+        }
+        // 伤药/补血 → 使用伤药
+        else if (cmdLower.includes("伤药") || cmdLower.includes("补血") || cmdLower.includes("治疗")) {
+            useItem("伤药");
+        }
+        // 休息/恢复 → 休息恢复
+        else if (cmdLower.includes("休息") || cmdLower.includes("恢复")) {
+            if (player.rations >= 3) {
+                player.rations -= 3;
+                player.hp = Math.min(player.hp + 20, player.maxHp);
+                log("稍作休息，消耗3份干粮，生命+20。", "success");
+                advanceTime(1);
+                updateUI();
+            } else {
+                log("干粮不足，无法休息！", "combat");
+            }
+        }
+        // 逃跑/撤退 → 逃跑
+        else if (cmdLower.includes("逃跑") || cmdLower.includes("撤退") || cmdLower.includes("逃")) {
+            if (player.battle) {
+                battleAction("flee");
+            } else {
+                log("当前没有战斗，无法逃跑。", "system");
+            }
+        }
+        // 攻击/打 → 战斗
+        else if (cmd.includes("攻击") || cmd.includes("打") || cmd.includes("战")) {
+            if (player.battle) {
+                battleAction("attack");
+            } else {
+                log("当前没有战斗。", "system");
+            }
+        }
+        // 防御/守 → 防御
+        else if (cmd.includes("防御") || cmd.includes("守")) {
+            if (player.battle) {
+                battleAction("defend");
+            } else {
+                log("当前没有战斗。", "system");
+            }
+        }
+        // 技能/计谋 → 技能
+        else if (cmd.includes("技能") || cmd.includes("计谋")) {
+            if (player.battle) {
+                battleAction("skill");
+            } else {
+                log("当前没有战斗。", "system");
+            }
+        }
+        // 隐藏指令：加钱、加属性（测试用）
+        else if (cmd === "给我钱" || cmd === "gm money") {
+            player.silver += 100;
+            log("【GM】获得100银两！", "success");
+            updateUI();
+        }
+        else if (cmd === "满血" || cmd === "gm hp") {
+            player.hp = player.maxHp;
+            log("【GM】生命恢复满！", "success");
+            updateUI();
+        }
+        // 未知指令
+        else {
+            log("未知指令。可用指令：", "system");
+            log("探索、前往、背包、商店、状态、休息", "item");
+            log("战斗中：攻击、防御、技能、逃跑", "item");
+            log("或输入「天气如何」「曹操是谁」等提问", "system");
+        }
+    }
+    
+    // ==================== 环境介绍 ====================
+    function showEnvironment() {
+        var loc = LOCATIONS[player.location];
+        var placeName = player.place || player.location;
+        
+        document.getElementById('mainPanel').style.display = 'none';
+        document.getElementById('envPanel').style.display = 'block';
+        
+        var title = "🏞️ " + placeName;
+        if (player.place && loc.places && loc.places[player.place]) {
+            title += " · " + loc.places[player.place].type;
+        }
+        document.getElementById('envTitle').textContent = title;
+        
+        var envDesc = loc.envDesc || loc.desc;
+        if (player.place && loc.places && loc.places[player.place] && loc.places[player.place].env) {
+            envDesc = loc.places[player.place].env;
+        }
+        document.getElementById('envDesc').textContent = envDesc;
+        
+        var html = "";
+        
+        // 地点详情
+        if (player.place && loc.places && loc.places[player.place]) {
+            var place = loc.places[player.place];
+            html += '<div style="background:#1a1520;padding:10px;border-radius:6px;margin-bottom:10px;border-left:3px solid #9ab87a;">';
+            html += '<div style="color:#9ab87a;font-size:0.8rem;">类型：' + place.type + '</div>';
+            html += '<div style="color:#8a7a6a;font-size:0.75rem;margin-top:4px;">' + place.env + '</div>';
+            html += '</div>';
+        }
+        
+        // NPC对话
+        if (loc.npcs && loc.npcs.length > 0) {
+            html += '<div style="color:#7a9acd;font-size:0.8rem;margin:10px 0;">💬 路人交谈</div>';
+            loc.npcs.forEach(function(npc) {
+                html += '<div class="env-npc"><div class="env-npc-name">👤 ' + npc.name + '</div><div class="env-npc-text">"' + npc.text + '"</div></div>';
+            });
+        }
+        
+        // 集市吆呵
+        if (loc.yells && loc.yells.length > 0) {
+            html += '<div style="color:#c4a060;font-size:0.8rem;margin:10px 0;">📢 街市之声</div>';
+            loc.yells.forEach(function(yell) {
+                html += '<div class="env-yell"><div class="env-yell-text">"' + yell + '"</div></div>';
+            });
+        }
+        
+        // 道路信息
+        if (loc.road) {
+            var road = ROAD_TYPES[loc.road];
+            html += '<div style="background:#1a1520;padding:10px;border-radius:6px;margin-top:10px;">';
+            html += '<div style="color:#d4af37;font-size:0.8rem;">🛤️ 道路：' + loc.road + '</div>';
+            html += '<div style="color:#8a7a6a;font-size:0.75rem;">' + road.desc + '</div>';
+            html += '<div style="color:#8a7a6a;font-size:0.75rem;margin-top:4px;">干粮消耗：' + road.rationsPerDay + '份/日</div>';
+            html += '</div>';
+        }
+        
+        // 相邻城市
+        if (loc.nearby && loc.nearby.length > 0) {
+            html += '<div style="background:#1a1520;padding:10px;border-radius:6px;margin-top:10px;">';
+            html += '<div style="color:#7a9acd;font-size:0.8rem;">📍 相邻：' + loc.nearby.join('、') + '</div>';
+            html += '</div>';
+        }
+        
+        if (!html) {
+            html = "<div style='text-align:center;color:#8a7a6a;padding:20px;'>此处人迹罕至，无人可交谈。</div>";
+        }
+        
+        document.getElementById('envContent').innerHTML = html;
+    }
+    
+    function closeEnvironment() {
+        document.getElementById('envPanel').style.display = 'none';
+        document.getElementById('mainPanel').style.display = 'block';
+    }
+    
+    // ==================== 移动系统 ====================
+    function calculateTravelTime(fromCity, toCity) {
+        var weather = WEATHER_TYPES[player.weather];
+        var mount = MOUNTS[player.mount] || { speedMod: 1 };
+        var baseDays = 1;
+        var fromLoc = LOCATIONS[fromCity];
+        
+        if (!fromLoc.nearby || fromLoc.nearby.indexOf(toCity) === -1) {
+            baseDays = 2;
+        }
+        
+        var roadType = fromLoc.road || "官道";
+        var road = ROAD_TYPES[roadType];
+        var roadMod = road.baseSpeed;
+        
+        var totalDays = Math.ceil(baseDays / (roadMod * weather.speedMod * mount.speedMod));
+        
+        return Math.max(1, totalDays);
+    }
+    
+    function calculateRationsCost(days) {
+        var roadType = LOCATIONS[player.location].road || "官道";
+        var road = ROAD_TYPES[roadType];
+        return Math.ceil(road.rationsPerDay * days * 0.7);
+    }
+    
+    function openDestination() {
+        document.getElementById('mainPanel').style.display = 'none';
+        document.getElementById('destinationPanel').style.display = 'block';
+        
+        var currentLoc = LOCATIONS[player.location];
+        document.getElementById('destCurrent').textContent = "当前位置：" + player.location + " · " + currentLoc.type;
+        
+        // 计算当前载重
+        var currentLoad = calculateCurrentLoad();
+        var mount = MOUNTS[player.mount];
+        var maxLoad = mount ? mount.capacity : 10;
+        var loadPercent = Math.round(currentLoad / maxLoad * 100);
+        var loadColor = loadPercent > 100 ? "#c97a7a" : (loadPercent > 80 ? "#d4a060" : "#8acd7a");
+        
+        var weather = WEATHER_TYPES[player.weather];
+        var rulerInfo = FACTION_RULERS[currentLoc.faction] || FACTION_RULERS["流浪"];
+        var rulerStyle = RULER_STYLES[rulerInfo.style];
+        
+        var travelInfo = "📅 " + weather.icon + " " + weather.name + "（速度×" + weather.speedMod + "）\n";
+        travelInfo += "🛤️ " + currentLoc.road + "：" + ROAD_TYPES[currentLoc.road].desc + "\n";
+        if (player.mount) {
+            travelInfo += "🐎 " + mount.name + "（载重 " + maxLoad + "）\n";
+        }
+        travelInfo += "📦 当前载重：<span style='color:" + loadColor + "'>" + currentLoad + "/" + maxLoad + " (" + loadPercent + "%)</span>\n";
+        travelInfo += "👮 治安：" + rulerStyle.icon + rulerInfo.name + "：" + rulerStyle.desc;
+        
+        document.getElementById('travelInfo').innerHTML = travelInfo;
+        
+        var html = "";
+        
+        // 城内地点
+        if (currentLoc.places) {
+            html += '<div class="dest-section"><div class="dest-section-title">🏘️ ' + player.location + '城内</div><div class="dest-btns">';
+            for (var place in currentLoc.places) {
+                html += '<button class="dest-btn" data-fn="goToPlace" data-param="' + place + '">' + place + '</button>';
+            }
+            html += "</div></div>";
+        }
+        
+        // 商旅路线
+        var nearbyCities = currentLoc.nearby || [];
+        console.log("当前位置:", player.location, "相邻城市:", nearbyCities);
+        if (nearbyCities.length > 0) {
+            html += '<div class="dest-section"><div class="dest-section-title">🚗 商旅路线</div>';
+            nearbyCities.forEach(function(c) {
+                var destLoc = LOCATIONS[c];
+                if (!destLoc) return;
+                
+                var roadKey1 = player.location + "-" + c;
+                var roadKey2 = c + "-" + player.location;
+                var roadInfo = player.roadIntel[roadKey1] || player.roadIntel[roadKey2];
+                var status = roadInfo ? roadInfo.status : "未知";
+                var statusData = ROAD_STATUS[status] || ROAD_STATUS["崎岖"];
+                
+                var days = calculateTravelTime(player.location, c);
+                var cost = calculateRationsCost(days);
+                var toll = calculateToll(c);
+                var totalCost = cost + toll;
+                
+                var disabled = (cost > player.rations) ? ' disabled="disabled"' : '';
+                var costLabel = cost > player.rations ? ' 干粮不足' : '';
+                var tollLabel = toll > 0 ? ' | 过路费' + toll + '银' : ' | 免过路费';
+                var isNew = player.discovered.indexOf(c) === -1 ? ' ❓' : '';
+                
+                html += '<div style="background:#1a1520;padding:8px;border-radius:6px;margin-bottom:6px;">';
+                html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+                html += '<button class="dest-btn nearby"' + disabled + ' data-fn="travelTo" data-param="' + c + '">' + statusData.icon + ' ' + c + isNew + '</button>';
+                html += '</div>';
+                html += '<div style="font-size:0.7rem;color:#8a7a6a;margin-top:4px;">';
+                html += '<span style="color:' + statusData.icon.includes('🔴') ? '#c97a7a' : (statusData.icon.includes('🟡') ? '#d4a060' : '#8acd7a') + '">' + status + '</span> | ';
+                html += days + '天 | ' + cost + '干粮' + costLabel + tollLabel;
+                if (roadInfo && roadInfo.desc) {
+                    html += '<br>' + roadInfo.desc;
+                }
+                html += '</div></div>';
+            });
+            html += "</div>";
+        }
+        
+        // 驿站传送
+        var stageCities = Object.keys(LOCATIONS).filter(function(c) { return LOCATIONS[c].stage && player.discovered.indexOf(c) !== -1 && c !== player.location; });
+        if (stageCities.length > 0) {
+            html += '<div class="dest-section"><div class="dest-section-title">🚉 驿站传送（30银）</div><div class="dest-btns">';
+            stageCities.forEach(function(c) {
+                html += '<button class="dest-btn stage" data-fn="stageTo" data-param="' + c + '">' + c + '</button>';
+            });
+            html += "</div></div>";
+        }
+        
+        document.getElementById('destContent').innerHTML = html || "<div style='text-align:center;color:#8a7a6a'>无处可去</div>";
+    }
+    
+    // 计算当前载重
+    function calculateCurrentLoad() {
+        var load = 0;
+        // 货物重量
+        for (var g in player.goods) {
+            if (GOODS[g]) {
+                load += player.goods[g] * GOODS[g].weight;
+            }
+        }
+        // 背包物品重量（简化：每件算1）
+        for (var item in player.inventory) {
+            if (player.inventory[item] > 0) {
+                load += player.inventory[item];
+            }
+        }
+        // 干粮重量
+        load += Math.floor(player.rations / 5); // 每5份算1个重量
+        return load;
+    }
+    
+    // 计算过路费
+    function calculateToll(city) {
+        var destLoc = LOCATIONS[city];
+        if (!destLoc) return 0;
+        var rulerInfo = FACTION_RULERS[destLoc.faction] || FACTION_RULERS["流浪"];
+        var rulerStyle = RULER_STYLES[rulerInfo.style];
+        
+        // 货物价值影响过路费
+        var goodsValue = 0;
+        for (var g in player.goods) {
+            if (GOODS[g] && player.goods[g] > 0) {
+                goodsValue += player.goods[g] * GOODS[g].basePrice;
+            }
+        }
+        
+        // 根据统治者风格计算过路费
+        if (rulerStyle.tax === 0) return 0; // 仁德不收税
+        var toll = Math.floor(goodsValue * rulerStyle.tax / 100);
+        return Math.max(0, toll);
+    }
+    
+    function closeDestination() {
+        document.getElementById('destinationPanel').style.display = 'none';
+        document.getElementById('mainPanel').style.display = 'block';
+    }
+    
+    function goToPlace(place) {
+        var currentLoc = LOCATIONS[player.location];
+        var placeData = currentLoc.places[place];
+        var placeType = placeData.type;
+        player.place = place;
+        
+        log("── " + player.location + " · " + place + " ──", "success");
+        log(placeData.desc, "normal");
+        
+        // 根据地点类型显示不同功能
+        if (placeType === "镖局") {
+            showBiaojuDialog();
+        } else if (placeType === "坊市" || placeType === "市集" || placeType === "渡口" || placeType === "大集") {
+            showMarketDialog();
+        } else if (placeType === "客栈" || placeType === "驿站" || placeType === "大客栈") {
+            log("可在客栈打探消息，或休息恢复体力。", "item");
+        } else if (placeType === "茶馆") {
+            log("在此歇脚喝茶，与人闲聊可获取情报。", "item");
+        } else if (placeType === "庙会") {
+            log("庙会热闹非凡，或有商机可寻。", "item");
+        } else if (placeType === "官府") {
+            log("官府重地，不可随意逗留。", "system");
+        } else if (placeType === "兵营" || placeType === "军营" || placeType === "军事") {
+            log("军事重地，商旅止步。", "system");
+        } else if (placeType === "农家" || placeType === "田野" || placeType === "农田" || placeType === "田地") {
+            log("田园风光，偶有农产可交易。", "item");
+        }
+        
+        closeDestination();
+        updateUI();
+    }
+    
+    // 镖局对话 - 雇佣护卫
+    function showBiaojuDialog() {
+        var loc = LOCATIONS[player.location];
+        var guardCost = 5; // 每个护卫5银
+        var currentGuard = player.guard;
+        
+        log("═══════════════════", "system");
+        log("🛡️ 镖局 · 护卫服务", "important");
+        log("═══════════════════", "system");
+        
+        if (currentGuard > 0) {
+            log("您已有护卫：" + currentGuard + "人", "success");
+        } else {
+            log("您暂无护卫，商旅安全难以保障...", "system");
+        }
+        
+        log("镖师拱手道：", "item");
+        log("「客官，乱世行商，没有护卫可不行啊！」", "item");
+        log("「我这里有精壮的汉子，身手不凡，保您货物平安！」", "item");
+        log("", "normal");
+        
+        // 护卫等级提示
+        if (currentGuard >= 5) {
+            log("🛡️ 商队防护：严密（盗匪不敢靠近）", "success");
+        } else if (currentGuard >= 3) {
+            log("🛡️ 商队防护：较强（可应对普通盗匪）", "success");
+        } else if (currentGuard >= 1) {
+            log("🛡️ 商队防护：一般", "system");
+        } else {
+            log("⚠️ 商队防护：无（货物易被盗匪觊觎）", "combat");
+        }
+        
+        log("", "normal");
+        log("💰 雇佣费用：每人" + guardCost + "银/次", "item");
+        log("💰 您现有：银两 " + player.silver + "枚", "item");
+        log("", "normal");
+        log("输入「雇佣1」或「雇佣」雇佣一名护卫", "system");
+        log("输入「解雇」解散全部护卫", "system");
+    }
+    
+    // 坊市对话 - 贸易
+    function showMarketDialog() {
+        var loc = LOCATIONS[player.location];
+        var hub = TRADE_HUBS[player.location];
+        
+        log("═══════════════════", "system");
+        log("🏪 " + player.location + " · 坊市贸易", "important");
+        log("═══════════════════", "system");
+        
+        if (!hub) {
+            log("此地暂无正规市场，贸易困难。", "system");
+            log("可前往徐州、下邳、寿春等大城进行贸易。", "item");
+            return;
+        }
+        
+        var specialty = GOODS[hub.specialty];
+        var demand = GOODS[hub.demand];
+        var goodsValue = calculateGoodsValue();
+        var currentLoad = calculateCurrentLoad();
+        var mount = MOUNTS[player.mount];
+        var maxLoad = mount ? mount.capacity : 10;
+        
+        log("📢 市集行情：", "item");
+        log("★ 特产：【" + hub.specialty + "】" + specialty.desc, "success");
+        log("☆ 急需：【" + hub.demand + "】" + demand.desc, "combat");
+        
+        log("", "normal");
+        log("📦 我的货物：", "item");
+        
+        var hasGoods = false;
+        for (var g in player.goods) {
+            if (player.goods[g] > 0) {
+                hasGoods = true;
+                var basePrice = GOODS[g] ? GOODS[g].basePrice : 10;
+                var priceMod = hub && hub.specialty === g ? hub.priceBonus : (hub && hub.demand === g ? 1/hub.priceBonus : 1);
+                var sellPrice = Math.round(basePrice * priceMod);
+                log("  " + g + " ×" + player.goods[g] + " → 可售 " + sellPrice + "银/个", "normal");
+            }
+        }
+        if (!hasGoods) {
+            log("  暂无货物", "system");
+        }
+        
+        log("", "normal");
+        log("📊 载重：" + currentLoad + "/" + maxLoad + "（" + player.mount ? MOUNTS[player.mount].name : "步行" + "）", "item");
+        log("💰 银两：" + player.silver + "银", "item");
+        
+        log("", "normal");
+        log("📦 可购买货物：粮食、布匹、盐、铁器、药材、茶叶、丝绸、牲畜、瓷器", "item");
+        log("输入「买 [货物名]」购买，如「买粮食」", "system");
+        log("输入「卖 [货物名]」出售，如「卖粮食」", "system");
+        
+        // 交通工具选项
+        log("", "normal");
+        log("🐎 交通工具（口头询问即可购买）：", "system");
+        for (var m in MOUNTS) {
+            if (m === "无") continue;
+            var canAfford = player.silver >= MOUNTS[m].price;
+            var isCurrent = player.mount === m;
+            if (isCurrent) {
+                log("  ★ " + m + "（当前使用）", "success");
+            } else {
+                log("  " + (canAfford ? "○" : "×") + " " + m + "：" + MOUNTS[m].price + "银（载重" + MOUNTS[m].capacity + "，速度×" + MOUNTS[m].speedMod + "）", canAfford ? "item" : "system");
+            }
+        }
+        log("", "normal");
+        log("💡 输入「买" + (player.mount ? "马" : "马") + "」即可购买", "system");
+    }
+    
+    // 处理购买交通工具
+    function handleBuyMount(cmd) {
+        var loc = LOCATIONS[player.location];
+        if (!TRADE_HUBS[player.location]) {
+            log("此处非正规市场，无法购买交通工具。", "system");
+            return;
+        }
+        
+        var mountName = null;
+        if (cmd.includes("马") && !cmd.includes("马匹")) {
+            // 优先买骏马
+            if (player.silver >= MOUNTS["骏马"].price) {
+                mountName = "骏马";
+            } else if (player.silver >= MOUNTS["驴车"].price) {
+                mountName = "驴车";
+            }
+        } else if (cmd.includes("骏马")) {
+            mountName = "骏马";
+        } else if (cmd.includes("战马")) {
+            mountName = "战马";
+        } else if (cmd.includes("骡车")) {
+            mountName = "骡车";
+        } else if (cmd.includes("驴车")) {
+            mountName = "驴车";
+        } else if (cmd.includes("马车")) {
+            mountName = "马车";
+        } else if (cmd.includes("船") || cmd.includes("快船")) {
+            mountName = "快船";
+        }
+        
+        if (!mountName) {
+            log("请说明要购买什么交通工具，如「买马」。", "system");
+            log("可选：骏马、骡车、驴车、马车、快船", "item");
+            return;
+        }
+        
+        if (player.mount === mountName) {
+            log("您已经拥有「" + mountName + "」了。", "system");
+            return;
+        }
+        
+        var mount = MOUNTS[mountName];
+        if (player.silver < mount.price) {
+            log("银两不足！「" + mountName + "」需要" + mount.price + "银。", "combat");
+            log("您现有：" + player.silver + "银", "item");
+            return;
+        }
+        
+        player.silver -= mount.price;
+        player.mount = mountName;
+        
+        log("✅ 购买「" + mountName + "」，花费" + mount.price + "银两", "success");
+        log("🐎 载重提升至" + mount.capacity + "，速度×" + mount.speedMod, "item");
+        log("💰 银两：" + player.silver, "item");
+        updateUI();
+    }
+    
+    // 处理雇佣护卫命令
+    function handleHireGuard(cmd) {
+        var loc = LOCATIONS[player.location];
+        if (player.place !== "镖局" && !loc.places["镖局"]) {
+            log("此处非镖局，无法雇佣护卫。", "system");
+            return;
+        }
+        
+        var guardCost = 5;
+        
+        if (cmd.includes("解散") || cmd.includes("解雇")) {
+            if (player.guard <= 0) {
+                log("您没有护卫可以解散。", "system");
+                return;
+            }
+            log("您遣散了全部" + player.guard + "名护卫。", "success");
+            player.guard = 0;
+            log("🛡️ 商队护卫：0人", "system");
+            updateUI();
+            return;
+        }
+        
+        if (player.silver < guardCost) {
+            log("银两不足！雇佣一名护卫需要" + guardCost + "银。", "combat");
+            log("您现有：" + player.silver + "银", "item");
+            return;
+        }
+        
+        // 检查载重
+        var currentLoad = calculateCurrentLoad();
+        var mount = MOUNTS[player.mount];
+        var maxLoad = mount ? mount.capacity : 10;
+        if (currentLoad + 2 > maxLoad) {
+            log("载重不足！雇佣护卫会占用载重配额。", "combat");
+            log("当前载重：" + currentLoad + "/" + maxLoad, "item");
+            return;
+        }
+        
+        player.silver -= guardCost;
+        player.guard++;
+        
+        log("✅ 雇佣1名护卫，花费" + guardCost + "银两", "success");
+        log("🛡️ 商队护卫：" + player.guard + "人", "item");
+        log("💰 银两：" + player.silver, "item");
+        
+        // 根据护卫数量给出提示
+        if (player.guard >= 5) {
+            log("🛡️ 商队防护：严密（盗匪不敢靠近）", "success");
+        } else if (player.guard >= 3) {
+            log("🛡️ 商队防护：较强（可应对普通盗匪）", "success");
+        } else if (player.guard >= 1) {
+            log("🛡️ 商队防护：一般", "system");
+        }
+        
+        updateUI();
+    }
+    
+    // 处理买卖命令
+    function handleTradeCmd(cmd) {
+        var loc = LOCATIONS[player.location];
+        var hub = TRADE_HUBS[player.location];
+        
+        // 检查是否在坊市
+        var isMarket = player.place === "坊市" || player.place === "市集" || player.place === "渡口" || player.place === "大集";
+        if (!isMarket && !hub) {
+            log("此处非市场，无法交易。", "system");
+            return;
+        }
+        
+        // 买
+        if (cmd.includes("买")) {
+            for (var goods in GOODS) {
+                if (cmd.indexOf(goods) !== -1) {
+                    buyGoods(goods);
+                    return;
+                }
+            }
+            log("请指定要购买的货物，如「买粮食」。", "system");
+            log("可选：" + Object.keys(GOODS).join("、"), "item");
+            return;
+        }
+        
+        // 卖
+        if (cmd.includes("卖")) {
+            for (var goods in GOODS) {
+                if (cmd.indexOf(goods) !== -1) {
+                    sellGoods(goods);
+                    return;
+                }
+            }
+            log("请指定要出售的货物，如「卖粮食」。", "system");
+            var sellable = Object.keys(player.goods).filter(function(g) { return player.goods[g] > 0; });
+            if (sellable.length > 0) {
+                log("您有：" + sellable.join("、"), "item");
+            } else {
+                log("您没有可出售的货物。", "system");
+            }
+            return;
+        }
+    }
+    
+    function travelTo(city) {
+        var days = calculateTravelTime(player.location, city);
+        var rationsCost = calculateRationsCost(days);
+        var toll = calculateToll(city);
+        var totalCost = rationsCost;
+        
+        if (rationsCost > player.rations) {
+            log("干粮不足！需要" + rationsCost + "份干粮，行军" + days + "天。", "combat");
+            return;
+        }
+        
+        // 消耗干粮
+        player.rations -= rationsCost;
+        
+        var weather = WEATHER_TYPES[player.weather];
+        var mountStr = player.mount ? MOUNTS[player.mount].name : "步行";
+        var destLoc = LOCATIONS[city];
+        var rulerInfo = FACTION_RULERS[destLoc.faction] || FACTION_RULERS["流浪"];
+        var rulerStyle = RULER_STYLES[rulerInfo.style];
+        
+        log("═══════════════════", "system");
+        log("🚗 商旅启程 → 「" + city + "」", "important");
+        log("═══════════════════", "system");
+        log("📅 行军" + days + "天 | " + weather.icon + weather.name + " | " + mountStr, "system");
+        log("🍙 干粮消耗：" + rationsCost + "份", "item");
+        
+        // 获取道路情报
+        var roadKey1 = player.location + "-" + city;
+        var roadKey2 = city + "-" + player.location;
+        var roadInfo = player.roadIntel[roadKey1] || player.roadIntel[roadKey2];
+        var roadStatus = roadInfo ? roadInfo.status : "崎岖";
+        var statusData = ROAD_STATUS[roadStatus] || ROAD_STATUS["崎岖"];
+        
+        log("🛤️ 道路状况：" + statusData.icon + roadStatus, "item");
+        
+        // 仁德统治者可能有护送
+        if (rulerStyle.escort) {
+            log("💚 " + rulerInfo.name + "派官军沿途护送，一路平安！", "success");
+        }
+        
+        // 支付过路费
+        if (toll > 0) {
+            player.silver -= toll;
+            log("👮 「" + rulerInfo.name + "」收取过路费：" + toll + "银两 💸", "combat");
+        } else if (rulerStyle.tax === 0) {
+            log("💚 " + rulerInfo.name + "治下免收过路费！", "success");
+        }
+        
+        // 商旅事件
+        var goodsValue = calculateGoodsValue();
+        var hasGoods = goodsValue > 0;
+        
+        // 根据道路状态和统治者性格决定事件
+        if (rulerStyle.danger && Math.random() < 0.6) {
+            // 残暴统治区 - 抢劫风险
+            handleBrutalAreaEvent();
+        } else if (hasGoods && roadStatus === "危险") {
+            // 有货物 + 危险道路 - 盗匪风险
+            handleBanditEvent();
+        } else if (hasGoods && Math.random() < 0.3) {
+            // 有货物可能遇到商队或税收检查
+            handleTradeEvent();
+        } else if (Math.random() < 0.4) {
+            // 正常旅途事件
+            handleNormalTravelEvent();
+        }
+        
+        // 到达城市
+        player.location = city;
+        player.place = null;
+        if (player.discovered.indexOf(city) === -1) {
+            player.discovered.push(city);
+        }
+        
+        log("═══════════════════", "system");
+        log("🏛️ 抵达「" + city + "」", "success");
+        log("═══════════════════", "system");
+        log(LOCATIONS[city].desc, "normal");
+        
+        // 显示贸易情报
+        if (TRADE_HUBS[city]) {
+            var hub = TRADE_HUBS[city];
+            var specialty = GOODS[hub.specialty];
+            log("📢 市集行情：本城特产【" + hub.specialty + "】，需求【" + hub.demand + "】", "item");
+        }
+        
+        // 显示NPC对话
+        var loc = LOCATIONS[city];
+        if (loc.npcs && loc.npcs.length > 0) {
+            var npc = loc.npcs[Math.floor(Math.random() * loc.npcs.length)];
+            log("「" + npc.name + "」道：" + npc.text, "item");
+        }
+        
+        if (loc.yells && loc.yells.length > 0 && Math.random() > 0.5) {
+            var yell = loc.yells[Math.floor(Math.random() * loc.yells.length)];
+            log("远处传来吆喝声：" + yell, "item");
+        }
+        
+        // 更新道路情报
+        updateRoadIntel(city);
+        
+        advanceTime(days);
+        checkQuest("city");
+        closeDestination();
+        updateUI();
+    }
+    
+    // 计算货物总价值
+    function calculateGoodsValue() {
+        var value = 0;
+        for (var g in player.goods) {
+            if (GOODS[g] && player.goods[g] > 0) {
+                value += player.goods[g] * GOODS[g].basePrice;
+            }
+        }
+        return value;
+    }
+    
+    // 残暴统治区事件
+    function handleBrutalAreaEvent() {
+        var goodsValue = calculateGoodsValue();
+        if (goodsValue > 0 && Math.random() < 0.5) {
+            var loss = Math.floor(goodsValue * (0.1 + Math.random() * 0.2));
+            if (loss > 0) {
+                // 随机损失货物
+                var goodsList = Object.keys(player.goods).filter(function(g) { return player.goods[g] > 0; });
+                if (goodsList.length > 0) {
+                    var stolen = goodsList[Math.floor(Math.random() * goodsList.length)];
+                    var stolenCount = Math.min(player.goods[stolen], Math.ceil(Math.random() * 3));
+                    player.goods[stolen] -= stolenCount;
+                    if (player.goods[stolen] <= 0) delete player.goods[stolen];
+                    log("🔥 遭遇乱兵！货物被抢走【" + stolen + "】×" + stolenCount, "combat");
+                }
+            }
+        }
+        
+        var scenes = [
+            "沿途村庄荒废，百姓流离失所...",
+            "遇到逃难的百姓，神情惊恐...",
+            "只见乱兵烧杀抢掠，无人敢管..."
+        ];
+        log(scenes[Math.floor(Math.random() * scenes.length)], "combat");
+    }
+    
+    // 盗匪事件
+    function handleBanditEvent() {
+        var roll = Math.random();
+        if (player.guard >= 3) {
+            log("🛡️ 商队护卫严密，盗匪望而却步！", "success");
+        } else if (roll < 0.5) {
+            var goodsList = Object.keys(player.goods).filter(function(g) { return player.goods[g] > 0; });
+            if (goodsList.length > 0) {
+                var stolen = goodsList[Math.floor(Math.random() * goodsList.length)];
+                var stolenCount = Math.min(player.goods[stolen], 1 + Math.floor(Math.random() * 2));
+                player.goods[stolen] -= stolenCount;
+                if (player.goods[stolen] <= 0) delete player.goods[stolen];
+                log("⚠️ 山贼出没！货物被劫【" + stolen + "】×" + stolenCount, "combat");
+            }
+        } else {
+            log("⚠️ 山道偏僻，幸而平安通过...", "system");
+        }
+    }
+    
+    // 贸易事件
+    function handleTradeEvent() {
+        var roll = Math.random();
+        if (roll < 0.4) {
+            // 遇到商队，可以交易情报
+            log("🐫 途中遇到商队，商人们热情招呼...", "item");
+            log("💡 从商人处得知：某地正在闹灾，粮食价格看涨...", "success");
+        } else if (roll < 0.7) {
+            // 官府检查
+            var goodsValue = calculateGoodsValue();
+            var fine = Math.floor(goodsValue * 0.05);
+            if (fine > 0) {
+                player.silver = Math.max(0, player.silver - fine);
+                log("👮 官府设卡检查，缴纳商税：" + fine + "银两", "system");
+            }
+        } else {
+            log("🐫 与商队结伴而行，一路畅谈生意经...", "item");
+        }
+    }
+    
+    // 正常旅途事件
+    function handleNormalTravelEvent() {
+        var events = [
+            { text: "沿途风景秀丽，心情舒畅", effect: function() { player.hp = Math.min(player.hp + 5, player.maxHp); }, type: "success" },
+            { text: "路遇老农，施舍了些干粮", effect: function() { player.rations = Math.max(0, player.rations - 2); player.fame += 1; }, type: "item" },
+            { text: "发现路边有散落的银两", effect: function() { player.silver += 3; }, type: "success" },
+            { text: "遇到游方郎中，学得养生之道", effect: function() { player.maxHp += 5; }, type: "success" },
+            { text: "山路难行，体力消耗较大", effect: function() { player.hp = Math.max(0, player.hp - 5); }, type: "combat" },
+            { text: "天气突变，耽搁了一日", effect: function() { advanceTime(1); }, type: "system" }
+        ];
+        var evt = events[Math.floor(Math.random() * events.length)];
+        evt.effect();
+        log("🌟 " + evt.text, evt.type);
+    }
+    
+    // 更新道路情报
+    function updateRoadIntel(city) {
+        var destLoc = LOCATIONS[city];
+        if (!destLoc || !destLoc.nearby) return;
+        
+        // 收集目的地的相邻道路情报
+        destLoc.nearby.forEach(function(nearbyCity) {
+            if (LOCATIONS[nearbyCity]) {
+                // 随机生成或更新道路状况
+                if (!player.roadIntel[city + "-" + nearbyCity]) {
+                    var statuses = ["畅通", "畅通", "畅通", "崎岖", "崎岖", "危险"];
+                    var newStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                    player.roadIntel[city + "-" + nearbyCity] = {
+                        status: newStatus,
+                        known: false,
+                        desc: newStatus === "畅通" ? "道路通畅，商旅络绎" : 
+                              newStatus === "崎岖" ? "道路难行，需谨慎" : 
+                              "盗匪出没，危险！"
+                    };
+                }
+            }
+        });
+    }
+    
+    function stageTo(city) {
+        if (player.silver < 30) {
+            log("银两不足！需要30银两。", "combat");
+            return;
+        }
+        
+        player.silver -= 30;
+        player.location = city;
+        player.place = null;
+        
+        log("── 驿站传送至「" + city + "」──", "important");
+        log("驿站掌柜笑道：客官慢走，转眼就到！", "item");
+        log("花费：30银两 | 瞬间到达（货物不受影响）", "system");
+        log(LOCATIONS[city].desc, "normal");
+        
+        if (player.discovered.indexOf(city) === -1) {
+            player.discovered.push(city);
+        }
+        
+        var loc = LOCATIONS[city];
+        if (loc.envDesc) {
+            log("【环境】" + loc.envDesc, "item");
+        }
+        
+        // 显示贸易情报
+        if (TRADE_HUBS[city]) {
+            var hub = TRADE_HUBS[city];
+            log("📢 市集行情：本城特产【" + hub.specialty + "】，需求【" + hub.demand + "】", "item");
+        }
+        
+        updateRoadIntel(city);
+        
+        advanceTime(1);
+        closeDestination();
+        updateUI();
+    }
+    
+    // ==================== 探索系统 ====================
+    function explore() {
+        if (player.rations < 1) {
+            log("干粮不足，无法探索！", "combat");
+            log("提示：可去商店购买干粮（5银/10份）。", "item");
+            return;
+        }
+        
+        player.rations -= 1;
+        
+        var currentLoc = LOCATIONS[player.location];
+        var weather = WEATHER_TYPES[player.weather];
+        
+        // 探索场景描述
+        var exploreScenes = [
+            "您独自漫步于城郊田野间...",
+            "您穿过熙熙攘攘的街市...",
+            "您在城门口与守卫攀谈...",
+            "您在茶馆中聆听众人议论...",
+            "您漫步于河畔小径...",
+            "您在寺庙中祈求平安...",
+            "您在集市上闲逛...",
+            "您在城墙边观察行人...",
+            "您向商队打听各地行情...",
+            "您与老农闲聊收成..."
+        ];
+        var scene = exploreScenes[Math.floor(Math.random() * exploreScenes.length)];
+        log("【探索】" + scene, "system");
+        
+        // 发现新城市或道路情报
+        if (currentLoc.nearby) {
+            // 先检查是否有未知的道路情报
+            var unknownRoads = currentLoc.nearby.filter(function(c) {
+                var key1 = player.location + "-" + c;
+                var key2 = c + "-" + player.location;
+                return !player.roadIntel[key1] && !player.roadIntel[key2];
+            });
+            
+            if (unknownRoads.length > 0 && Math.random() > 0.3) {
+                // 发现道路情报
+                var roadCity = unknownRoads[Math.floor(Math.random() * unknownRoads.length)];
+                var statuses = ["畅通", "畅通", "崎岖", "崎岖", "危险"];
+                var newStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                var descs = {
+                    "畅通": "道路通畅，商旅络绎不绝",
+                    "崎岖": "道路难行，需小心慢行",
+                    "危险": "盗匪出没，行路需谨慎"
+                };
+                player.roadIntel[player.location + "-" + roadCity] = {
+                    status: newStatus,
+                    known: true,
+                    desc: descs[newStatus]
+                };
+                log("★ 探知道路：「" + roadCity + "」方向 - " + ROAD_STATUS[newStatus].icon + " " + newStatus, "important");
+                log(descs[newStatus], "item");
+            }
+            
+            // 发现新城市
+            var newCities = currentLoc.nearby.filter(function(c) { return player.discovered.indexOf(c) === -1; });
+            if (newCities.length > 0 && Math.random() > 0.5) {
+                var found = newCities[Math.floor(Math.random() * newCities.length)];
+                player.discovered.push(found);
+                log("★ 发现新地点：「" + found + "」", "important");
+                log(LOCATIONS[found].desc, "normal");
+                
+                // 同时获取该城市的情报
+                if (LOCATIONS[found] && LOCATIONS[found].faction) {
+                    var rulerInfo = FACTION_RULERS[LOCATIONS[found].faction];
+                    if (rulerInfo) {
+                        var rulerStyle = RULER_STYLES[rulerInfo.style];
+                        log("📢 据说「" + rulerInfo.name + "」治下，" + rulerStyle.desc, "item");
+                    }
+                }
+            }
+        }
+        
+        // 探索结果
+        var results = [
+            { text: "发现野果，补充干粮", effect: function() { player.rations += 3; }, good: true },
+            { text: "采到珍贵药材", effect: function() { player.inventory["药材"] = (player.inventory["药材"] || 0) + 1; }, good: true },
+            { text: "遇见行商，赚了些钱", effect: function() { player.silver += 10; }, good: true },
+            { text: "遇到游方郎中，学得医术", effect: function() { player.int += 2; }, good: true },
+            { text: "遇见武林高手，切磋武艺", effect: function() { player.atk += 2; }, good: true },
+            { text: "在茶馆听到重要情报", effect: function() { player.fame += 3; }, good: true },
+            { text: "发现散落的银两", effect: function() { player.silver += 5; }, good: true },
+            { text: "遇到商队，学得贸易之道", effect: function() { player.fame += 2; }, good: true },
+            { text: "打听到某地缺粮，物价看涨", effect: function() { player.fame += 2; }, good: true },
+            { text: "遭遇野兽！", effect: function() { startBattle(); return true; }, combat: true },
+            { text: "遇到山贼！", effect: function() { startBattle(); return true; }, combat: true },
+            { text: "风景甚好，稍作休息", effect: function() { player.hp = Math.min(player.hp + 10, player.maxHp); player.rations += 1; }, good: true },
+            { text: "遇见流民，施舍了些干粮", effect: function() { player.rations = Math.max(0, player.rations - 3); player.fame += 2; }, neutral: true },
+            { text: "路见不平，拔刀相助", effect: function() { player.fame += 5; player.silver += 15; }, good: true },
+            { text: "在溪边生火做饭", effect: function() { player.rations += 2; player.hp = Math.min(player.hp + 5, player.maxHp); }, good: true },
+            { text: "被偷了钱袋！", effect: function() { player.silver = Math.max(0, player.silver - 10); }, bad: true },
+            { text: "一无所获", effect: function() {}, neutral: true }
+        ];
+        
+        var r = results[Math.floor(Math.random() * results.length)];
+        var isCombat = r.combat && r.effect();
+        
+        if (!isCombat) {
+            var msgType = r.good ? "success" : (r.bad ? "combat" : (r.neutral ? "system" : "normal"));
+            log(r.text, msgType);
+        }
+        
+        // 天气影响
+        if (weather.speedMod < 0.7) {
+            log("恶劣天气让您疲惫不堪，生命-5", "combat");
+            player.hp -= 5;
+        }
+        
+        advanceTime(1);
+        checkBattle();
+        updateUI();
+    }
+    
+    // 检查是否死亡
+    function checkBattle() {
+        if (player.hp <= 0) {
+            log("您体力耗尽，昏倒了...", "combat");
+            player.hp = Math.floor(player.maxHp / 4);
+            player.silver = Math.floor(player.silver / 2);
+            player.rations = Math.floor(player.rations / 2);
+            log("醒来后银两和干粮都丢了...", "system");
+        }
+    }
+    
+    // ==================== 战斗系统 ====================
+    function startBattle() {
+        var enemy = ENEMIES[Math.floor(Math.random() * ENEMIES.length)];
+        player.battle = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk };
+        
+        document.getElementById('mainPanel').style.display = 'none';
+        document.getElementById('battlePanel').style.display = 'block';
+        
+        updateBattleUI();
+        log("⚔️ 遭遇" + enemy.name + "！", "combat");
+    }
+    
+    function updateBattleUI() {
+        document.getElementById('enemyName').textContent = player.battle.name;
+        document.getElementById('enemyHp').textContent = player.battle.hp;
+        document.getElementById('playerHp').textContent = player.hp;
+        document.getElementById('playerMaxHp').textContent = player.maxHp;
+    }
+    
+    function battleAction(action) {
+        if (!player.battle) return;
+        
+        if (action === "attack") {
+            var dmg = Math.max(1, player.atk - 2 + Math.floor(Math.random() * 4));
+            player.battle.hp -= dmg;
+            log("你攻击" + player.battle.name + "，造成" + dmg + "伤害！", "success");
+            
+            if (player.battle.hp <= 0) {
+                winBattle();
+                return;
+            }
+            
+            var eDmg = Math.max(1, player.battle.atk - 5 + Math.floor(Math.random() * 3));
+            player.hp -= eDmg;
+            log(player.battle.name + "反击，" + eDmg + "伤害！", "combat");
+        }
+        else if (action === "defend") {
+            var eDmg = Math.max(1, player.battle.atk - 10);
+            player.hp -= eDmg;
+            log("防御姿态，" + player.battle.name + "造成" + eDmg + "伤害！", "combat");
+        }
+        else if (action === "skill") {
+            if (player.role === "谋士") {
+                var dmg = player.int + Math.floor(Math.random() * 10);
+                player.battle.hp -= dmg;
+                log("你施展计谋，对" + player.battle.name + "造成" + dmg + "伤害！", "success");
+                if (player.battle.hp <= 0) {
+                    winBattle();
+                    return;
+                }
+            } else {
+                log("你尝试使用技能，但发现自己不擅长此道...", "system");
+            }
+            var eDmg = Math.max(1, player.battle.atk - 5);
+            player.hp -= eDmg;
+            log(player.battle.name + "攻击，" + eDmg + "伤害！", "combat");
+        }
+        else if (action === "flee") {
+            if (Math.random() > 0.5) {
+                log("逃跑成功！", "success");
+                player.rations -= 1; // 逃跑只消耗1份干粮
+                log("仓皇逃跑，消耗1份干粮。", "system");
+                endBattle();
+                return;
+            } else {
+                log("逃跑失败！", "combat");
+                player.hp -= player.battle.atk;
+            }
+        }
+        
+        if (player.hp <= 0) {
+            log("你被打败了！", "combat");
+            player.hp = Math.floor(player.maxHp / 4);
+            player.silver = Math.floor(player.silver / 2);
+            // 不再减干粮，干粮是生存必需品
+            log("您体力耗尽昏倒，醒来后发现银两丢失...", "system");
+            endBattle();
+            return;
+        }
+        
+        updateBattleUI();
+    }
+    
+    function winBattle() {
+        log("★ 战斗胜利！", "important");
+        var reward = 10 + Math.floor(Math.random() * 10);
+        player.silver += reward;
+        player.fame += 2;
+        log("获得" + reward + "银两，名望+2", "success");
+        endBattle();
+    }
+    
+    function endBattle() {
+        player.battle = null;
+        document.getElementById('battlePanel').style.display = 'none';
+        document.getElementById('mainPanel').style.display = 'block';
+        updateUI();
+    }
+    
+    // ==================== 商店系统 ====================
+    function openShop() {
+        var loc = LOCATIONS[player.location];
+        if (!loc.shop) {
+            log("此处无商店。", "system");
+            return;
+        }
+        
+        document.getElementById('mainPanel').style.display = 'none';
+        document.getElementById('shopPanel').style.display = 'block';
+        
+        // 初始化/刷新商家库存（每次进入商店有几率补充）
+        for (var item in SHOP_ITEMS) {
+            if (shopStock[item] === undefined) {
+                shopStock[item] = 3 + Math.floor(Math.random() * 5); // 初始库存 3-7
+            } else if (shopStock[item] < 2 && Math.random() > 0.5) {
+                // 库存不足时有几率补货
+                shopStock[item] += Math.floor(Math.random() * 3) + 1;
+            }
+        }
+        
+        var discount = 1;
+        var html = "";
+        
+        // 获取玩家已拥有数量
+        function getPlayerCount(item) {
+            if (item === "干粮") return player.rations;
+            return player.inventory[item] || 0;
+        }
+        
+        // 获取商家库存
+        function getShopStock(item) {
+            return shopStock[item] || 0;
+        }
+        
+        // 按分类显示物品
+        var categories = {};
+        for (var item in SHOP_ITEMS) {
+            var cat = SHOP_ITEMS[item].category || "杂货";
+            if (!categories[cat]) categories[cat] = [];
+            categories[cat].push(item);
+        }
+        
+        for (var cat in categories) {
+            var color = ITEM_COLORS[cat] || "#c4a060";
+            html += '<div style="color:' + color + ';font-size:0.85rem;margin:10px 0 8px;border-bottom:1px solid #2a1a10;padding-bottom:4px;">◆ ' + cat + '</div>';
+            
+            categories[cat].forEach(function(item) {
+                var price = Math.floor(SHOP_ITEMS[item].price * discount);
+                var playerCount = getPlayerCount(item);
+                var currentStock = getShopStock(item);
+                var disabled = (player.silver < price || currentStock <= 0) ? ' style="opacity:0.5;cursor:not-allowed;"' : '';
+                var priceColor = player.silver < price ? "#c97a7a" : "#d4af37";
+                var stockColor = currentStock <= 0 ? "#c97a7a" : (currentStock <= 2 ? "#d4a060" : "#8acd7a");
+                var stockText = currentStock <= 0 ? "售罄" : "库存:" + currentStock;
+                
+                // 玩家已有数量提示
+                var haveText = playerCount > 0 ? ' <span style="color:#8acd7a">（持有' + playerCount + '）</span>' : '';
+                
+                html += '<div class="item-row"><div><div style="color:#c4b49c">' + item + haveText + '</div><div style="font-size:0.7rem;color:#8a7a6a">' + SHOP_ITEMS[item].desc + '</div><div style="font-size:0.65rem;color:' + stockColor + '">' + stockText + '</div></div><div style="text-align:right;"><span style="color:' + priceColor + '">' + price + '银</span><button data-buy="' + item + '" data-price="' + price + '" ' + disabled + ' style="margin-left:8px;padding:4px 10px;background:#8b4513;color:#d4af37;border:none;border-radius:4px;cursor:pointer;">买</button></div></div>';
+            });
+        }
+        
+        // 银两余额提示
+        html += '<div style="text-align:center;color:#d4af37;font-size:0.8rem;margin-top:12px;padding:8px;background:#1a1520;border-radius:6px;">💰 银两余额：' + player.silver + '银</div>';
+        
+        document.getElementById('shopItems').innerHTML = html;
+    }
+    
+    // 商家库存系统
+    var shopStock = {};
+    
+    function buyItem(item, price) {
+        if (player.silver < price) {
+            log("💸 银两不足！需要" + price + "银，您只有" + player.silver + "银。", "combat");
+            return;
+        }
+        
+        // 检查库存
+        if (shopStock[item] !== undefined && shopStock[item] <= 0) {
+            log("❌ " + item + " 已售罄，请稍后再来！", "combat");
+            return;
+        }
+        
+        // 扣除库存
+        if (shopStock[item] !== undefined) {
+            shopStock[item]--;
+        }
+        
+        if (SHOP_ITEMS[item].mount) {
+            player.mount = SHOP_ITEMS[item].mount;
+            player.silver -= price;
+            log("✅ 购买" + item + "，花费" + price + "银", "success");
+            log("★ 获得坐骑：" + MOUNTS[player.mount].name + "！移动速度+" + Math.round((MOUNTS[player.mount].speedMod - 1) * 100) + "%", "important");
+        } else if (item === "干粮") {
+            player.silver -= price;
+            player.rations += 10;
+            log("✅ 购买干粮×10，花费" + price + "银", "success");
+            log("📦 干粮剩余：" + player.rations + "份 | 银两：" + player.silver + "银", "item");
+        } else if (item === "地图") {
+            player.silver -= price;
+            // 发现所有相邻城市
+            var loc = LOCATIONS[player.location];
+            if (loc.nearby) {
+                var added = 0;
+                loc.nearby.forEach(function(c) {
+                    if (player.discovered.indexOf(c) === -1) {
+                        player.discovered.push(c);
+                        added++;
+                    }
+                });
+                if (added > 0) {
+                    log("✅ 购买地图，花费" + price + "银", "success");
+                    log("🗺️ 发现" + added + "个相邻城市：" + loc.nearby.join("、"), "success");
+                } else {
+                    log("❌ 这些地方您已经探索过了，退还" + price + "银。", "system");
+                    player.silver += price;
+                    if (shopStock[item] !== undefined) shopStock[item]++; // 退还库存
+                }
+            }
+        } else if (SHOP_ITEMS[item].category === "装备") {
+            player.silver -= price;
+            player.inventory[item] = (player.inventory[item] || 0) + 1;
+            log("✅ 购买" + item + "，花费" + price + "银", "success");
+            log("📦 持有数量：" + player.inventory[item] + " | 打开背包点击\"使用\"装备。", "item");
+        } else {
+            player.silver -= price;
+            player.inventory[item] = (player.inventory[item] || 0) + 1;
+            log("✅ 购买" + item + "，花费" + price + "银", "success");
+            log("📦 持有数量：" + player.inventory[item], "item");
+        }
+        
+        updateUI();
+        openShop(); // 刷新商店
+    }
+    
+    function closeShop() {
+        document.getElementById('shopPanel').style.display = 'none';
+        document.getElementById('mainPanel').style.display = 'block';
+    }
+    
+    // ==================== 贸易系统 ====================
+    function openTrade() {
+        var loc = LOCATIONS[player.location];
+        if (!loc.shop) {
+            log("此处无商贸市场，无法交易。", "system");
+            return;
+        }
+        
+        document.getElementById('mainPanel').style.display = 'none';
+        document.getElementById('tradePanel').style.display = 'block';
+        
+        var hub = TRADE_HUBS[player.location];
+        var rulerInfo = FACTION_RULERS[loc.faction] || FACTION_RULERS["流浪"];
+        var rulerStyle = RULER_STYLES[rulerInfo.style];
+        
+        var infoHtml = "";
+        infoHtml += '<div style="background:#1a1520;padding:10px;border-radius:6px;margin-bottom:10px;">';
+        infoHtml += '<div style="color:#d4af37;font-size:0.85rem;margin-bottom:6px;">📍 ' + player.location + ' 商贸行情</div>';
+        if (hub) {
+            infoHtml += '<div style="color:#8acd7a;font-size:0.75rem;">★ 特产：' + GOODS[hub.specialty].desc + ' <span style="color:#d4af37">【' + hub.specialty + '】</span></div>';
+            infoHtml += '<div style="color:#c97a7a;font-size:0.75rem;">☆ 急需：' + GOODS[hub.demand].desc + ' <span style="color:#d4af37">【' + hub.demand + '】</span></div>';
+        }
+        infoHtml += '<div style="color:#8a7a6a;font-size:0.7rem;margin-top:4px;">' + rulerStyle.icon + rulerInfo.name + '治下 | ' + rulerStyle.desc + '</div>';
+        infoHtml += '</div>';
+        
+        // 当前货物
+        var goodsValue = calculateGoodsValue();
+        infoHtml += '<div style="color:#c4a060;font-size:0.8rem;margin-bottom:6px;">📦 我的货物（总价值：' + goodsValue + '银）</div>';
+        
+        var goodsHtml = "";
+        var hasGoods = false;
+        for (var g in player.goods) {
+            if (player.goods[g] > 0) {
+                hasGoods = true;
+                var basePrice = GOODS[g] ? GOODS[g].basePrice : 10;
+                var priceMod = hub && hub.specialty === g ? hub.priceBonus : (hub && hub.demand === g ? 1/hub.priceBonus : 1);
+                var sellPrice = Math.round(basePrice * priceMod * (1 + Math.random() * 0.2));
+                var isProfit = hub && hub.demand === g;
+                
+                goodsHtml += '<div class="item-row">';
+                goodsHtml += '<div><span style="color:#c4b49c">' + g + '</span><span style="color:#d4af37"> ×' + player.goods[g] + '</span></div>';
+                goodsHtml += '<div>';
+                goodsHtml += '<span style="color:' + (isProfit ? '#8acd7a' : '#d4af37') + '">' + sellPrice + '银/个' + (isProfit ? ' ↑' : '') + '</span>';
+                goodsHtml += '<button onclick="sellGoods(\'' + g + '\')" style="margin-left:8px;padding:4px 8px;background:#8b4513;color:#d4af37;border:none;border-radius:4px;cursor:pointer;">卖</button>';
+                goodsHtml += '</div></div>';
+            }
+        }
+        if (!hasGoods) {
+            goodsHtml = '<div style="color:#8a7a6a;font-size:0.75rem;text-align:center;padding:10px;">暂无货物</div>';
+        }
+        
+        // 可购买的货物
+        infoHtml += goodsHtml;
+        infoHtml += '<div style="color:#c4a060;font-size:0.8rem;margin:15px 0 6px;">🏪 可购货物</div>';
+        
+        var buyHtml = "";
+        for (var item in GOODS) {
+            var basePrice = GOODS[item].basePrice;
+            var priceMod = hub && hub.demand === item ? hub.priceBonus : (hub && hub.specialty === item ? 1/hub.priceBonus : 1);
+            var buyPrice = Math.round(basePrice * priceMod * (1 + Math.random() * 0.1));
+            var canAfford = player.silver >= buyPrice;
+            var isCheap = hub && hub.demand === item;
+            
+            buyHtml += '<div class="item-row">';
+            buyHtml += '<div><span style="color:#c4b49c">' + item + '</span>';
+            buyHtml += '<span style="font-size:0.7rem;color:#8a7a6a"> 重量' + GOODS[item].weight + ' | ' + GOODS[item].desc + '</span></div>';
+            buyHtml += '<div>';
+            buyHtml += '<span style="color:' + (isCheap ? '#8acd7a' : '#d4af37') + '">' + buyPrice + '银' + (isCheap ? ' ↓' : '') + '</span>';
+            buyHtml += '<button onclick="buyGoods(\'' + item + '\', ' + buyPrice + ')" ' + (canAfford ? '' : 'disabled') + ' style="margin-left:8px;padding:4px 8px;background:#4a6a4a;color:#d4af37;border:none;border-radius:4px;cursor:pointer;' + (canAfford ? '' : 'opacity:0.5') + ';">买</button>';
+            buyHtml += '</div></div>';
+        }
+        
+        infoHtml += buyHtml;
+        
+        // 载重信息
+        var currentLoad = calculateCurrentLoad();
+        var mount = MOUNTS[player.mount];
+        var maxLoad = mount ? mount.capacity : 10;
+        infoHtml += '<div style="background:#1a1520;padding:8px;border-radius:6px;margin-top:15px;text-align:center;">';
+        infoHtml += '🐴 载重：<span style="color:' + (currentLoad > maxLoad ? '#c97a7a' : '#8acd7a') + '">' + currentLoad + '</span> / ' + maxLoad;
+        if (player.mount) {
+            infoHtml += ' (' + mount.name + ')';
+        } else {
+            infoHtml += ' (步行)';
+        }
+        infoHtml += '<br><span style="font-size:0.7rem;color:#8a7a6a;">💰 银两：' + player.silver + '银</span>';
+        infoHtml += '</div>';
+        
+        document.getElementById('tradeInfo').innerHTML = infoHtml;
+        document.getElementById('tradeItems').innerHTML = "";
+    }
+    
+    function sellGoods(goods) {
+        if (!player.goods[goods] || player.goods[goods] <= 0) {
+            log("没有货物可卖！", "system");
+            return;
+        }
+        
+        var hub = TRADE_HUBS[player.location];
+        var basePrice = GOODS[goods] ? GOODS[goods].basePrice : 10;
+        var priceMod = hub && hub.specialty === goods ? hub.priceBonus : (hub && hub.demand === goods ? 1/hub.priceBonus : 1);
+        var sellPrice = Math.round(basePrice * priceMod);
+        
+        player.goods[goods]--;
+        player.silver += sellPrice;
+        
+        if (player.goods[goods] <= 0) {
+            delete player.goods[goods];
+        }
+        
+        log("✅ 出售【" + goods + "】×1，获得" + sellPrice + "银两", "success");
+        log("📦 剩余：" + (player.goods[goods] || 0) + "个 | 💰 银两：" + player.silver, "item");
+        
+        // 如果打开了贸易面板则刷新
+        if (document.getElementById('tradePanel').style.display !== 'none') {
+            openTrade();
+        }
+        updateUI();
+    }
+    
+    function buyGoods(goods) {
+        var hub = TRADE_HUBS[player.location];
+        if (!hub) {
+            log("此处非正规市场，无法购买货物。", "system");
+            log("可前往徐州、下邳、寿春等大城购买。", "item");
+            return;
+        }
+        
+        if (!GOODS[goods]) {
+            log("未知货物：「" + goods + "」。", "system");
+            log("可选：" + Object.keys(GOODS).join("、"), "item");
+            return;
+        }
+        
+        var basePrice = GOODS[goods].basePrice;
+        var priceMod = hub && hub.demand === goods ? hub.priceBonus : (hub && hub.specialty === goods ? 1/hub.priceBonus : 1);
+        var buyPrice = Math.round(basePrice * priceMod);
+        
+        if (player.silver < buyPrice) {
+            log("银两不足！需要" + buyPrice + "银。", "combat");
+            log("您现有：" + player.silver + "银", "item");
+            return;
+        }
+        
+        var load = calculateCurrentLoad();
+        var mount = MOUNTS[player.mount];
+        var maxLoad = mount ? mount.capacity : 10;
+        var weight = GOODS[goods].weight;
+        
+        if (load + weight > maxLoad) {
+            log("载重不足！当前载重：" + load + "/" + maxLoad, "combat");
+            log("可购买" + Math.floor((maxLoad - load) / weight) + "个「" + goods + "」", "item");
+            return;
+        }
+        
+        player.silver -= buyPrice;
+        player.goods[goods] = (player.goods[goods] || 0) + 1;
+        
+        log("✅ 购买【" + goods + "】×1，花费" + buyPrice + "银两", "success");
+        log("📦 持有：" + goods + " ×" + player.goods[goods] + " | 💰 银两：" + player.silver, "item");
+        
+        // 如果打开了贸易面板则刷新
+        if (document.getElementById('tradePanel').style.display !== 'none') {
+            openTrade();
+        }
+        updateUI();
+    }
+    
+    function closeTrade() {
+        document.getElementById('tradePanel').style.display = 'none';
+        document.getElementById('mainPanel').style.display = 'block';
+    }
+    
+    // ==================== 背包系统 ====================
+    function openInventory() {
+        document.getElementById('mainPanel').style.display = 'none';
+        document.getElementById('inventoryPanel').style.display = 'block';
+        
+        var html = "";
+        
+        // 干粮（可直接使用）
+        html += '<div style="color:#c4a060;font-size:0.85rem;margin-bottom:8px;">🍙 个人干粮</div>';
+        var canEat = player.hp < player.maxHp || player.rations > 0;
+        var eatBtn = canEat ? '<button onclick="useItem(\'干粮\')" style="padding:4px 10px;background:#4a6a4a;color:#d4af37;border:none;border-radius:4px;cursor:pointer;margin-left:8px;">吃</button>' : '';
+        html += '<div class="item-row"><span style="color:#c4b49c">干粮</span><span style="color:#d4af37">×' + player.rations + '份</span>' + eatBtn + '</div>';
+        
+        // 背包物品
+        var hasItems = false;
+        for (var item in player.inventory) {
+            if (player.inventory[item] > 0) {
+                hasItems = true;
+            }
+        }
+        
+        if (hasItems) {
+            html += '<div style="color:#7a9acd;font-size:0.85rem;margin:15px 0 8px;">🎒 背包物品</div>';
+            for (var item in player.inventory) {
+                if (player.inventory[item] > 0) {
+                    var useBtn = getItemUseButton(item);
+                    html += '<div class="item-row"><span style="color:#c4b49c">' + item + '</span><span style="color:#d4af37">×' + player.inventory[item] + '</span>' + useBtn + '</div>';
+                }
+            }
+            html += '<div style="font-size:0.7rem;color:#8a7a6a;margin-top:8px;text-align:center;">点击"使用"按钮使用物品</div>';
+        }
+        
+        if (!hasItems && player.rations === 0) {
+            html = '<div style="text-align:center;color:#8a7a6a;padding:20px;">背包空空的</div>';
+        }
+        
+        document.getElementById('invItems').innerHTML = html;
+    }
+    
+    // 获取物品使用按钮
+    function getItemUseButton(item) {
+        var usableItems = ["伤药", "药材", "铁剑", "布衣"];
+        if (usableItems.indexOf(item) === -1) {
+            return '<span style="font-size:0.7rem;color:#8a7a6a;margin-left:8px;">(装备)</span>';
+        }
+        return '<button onclick="useItem(\'' + item + '\')" style="padding:4px 10px;background:#8b4513;color:#d4af37;border:none;border-radius:4px;cursor:pointer;margin-left:8px;">使用</button>';
+    }
+    
+    // 使用物品
+    function useItem(item) {
+        log("【物品】", "system");
+        
+        if (item === "干粮") {
+            if (player.rations <= 0) {
+                log("没有干粮了！", "combat");
+                return;
+            }
+            player.rations -= 1;
+            var heal = 10;
+            player.hp = Math.min(player.hp + heal, player.maxHp);
+            log("吃了一份干粮，生命+10", "success");
+            log("干粮：" + player.rations + " | 生命：" + player.hp + "/" + player.maxHp, "item");
+        }
+        else if (item === "伤药") {
+            if (!player.inventory["伤药"] || player.inventory["伤药"] <= 0) {
+                log("背包中没有伤药！", "combat");
+                log("提示：可在商店购买（15银）或探索获得。", "item");
+                return;
+            }
+            player.inventory["伤药"] -= 1;
+            var heal = 30;
+            player.hp = Math.min(player.hp + heal, player.maxHp);
+            log("使用伤药，生命+30", "success");
+            log("生命：" + player.hp + "/" + player.maxHp, "item");
+        }
+        else if (item === "药材") {
+            if (!player.inventory["药材"] || player.inventory["药材"] <= 0) {
+                log("背包中没有药材！", "combat");
+                return;
+            }
+            player.inventory["药材"] -= 1;
+            player.hp = Math.min(player.hp + 20, player.maxHp);
+            player.int += 1;
+            log("使用药材，生命+20，智力+1", "success");
+        }
+        else if (item === "铁剑") {
+            if (!player.inventory["铁剑"] || player.inventory["铁剑"] <= 0) {
+                log("背包中没有铁剑！", "combat");
+                return;
+            }
+            player.atk += 5;
+            player.inventory["铁剑"] -= 1;
+            log("装备铁剑，武力+5", "success");
+            log("当前武力：" + player.atk, "item");
+        }
+        else if (item === "布衣") {
+            if (!player.inventory["布衣"] || player.inventory["布衣"] <= 0) {
+                log("背包中没有布衣！", "combat");
+                return;
+            }
+            player.maxHp += 10;
+            player.hp += 10;
+            player.inventory["布衣"] -= 1;
+            log("装备布衣，最大生命+10", "success");
+            log("当前生命上限：" + player.maxHp, "item");
+        }
+        else {
+            log("这个物品无法直接使用。", "system");
+            return;
+        }
+        
+        updateUI();
+        
+        // 如果在背包界面，刷新显示
+        if (document.getElementById('inventoryPanel').style.display === 'block') {
+            openInventory();
+        }
+    }
+    
+    function closeInventory() {
+        document.getElementById('inventoryPanel').style.display = 'none';
+        document.getElementById('mainPanel').style.display = 'block';
+    }
+    
+    // ==================== 问答系统 ====================
+    function askInfo() {
+        var loc = LOCATIONS[player.location];
+        var rulerInfo = FACTION_RULERS[loc.faction] || FACTION_RULERS["流浪"];
+        var rulerStyle = RULER_STYLES[rulerInfo.style];
+        
+        log("【打探】在" + player.location + "打探消息...", "item");
+        
+        // 当地统治者情报
+        log(rulerInfo.name + "治下：" + rulerStyle.desc, "system");
+        
+        // 道路情报
+        if (loc.nearby && loc.nearby.length > 0) {
+            var roadInfoList = [];
+            loc.nearby.forEach(function(city) {
+                var key1 = player.location + "-" + city;
+                var key2 = city + "-" + player.location;
+                var roadInfo = player.roadIntel[key1] || player.roadIntel[key2];
+                if (roadInfo && roadInfo.known) {
+                    var statusData = ROAD_STATUS[roadInfo.status] || ROAD_STATUS["崎岖"];
+                    roadInfoList.push(statusData.icon + city + "：" + roadInfo.desc);
+                }
+            });
+            if (roadInfoList.length > 0) {
+                log("📍 已知道路：" + roadInfoList.join(" | "), "item");
+            } else {
+                log("📍 各地路况尚不清楚，需探索或打听。", "system");
+            }
+        }
+        
+        // 贸易情报
+        var hub = TRADE_HUBS[player.location];
+        if (hub) {
+            var demand = GOODS[hub.demand];
+            var specialty = GOODS[hub.specialty];
+            log("💰 市集行情：本城特产【" + hub.specialty + "】，急需【" + hub.demand + "】", "success");
+        }
+        
+        player.fame += 1;
+        advanceTime(1);
+        updateUI();
+    }
+    
+    function handleQA(text) {
+        var weather = WEATHER_TYPES[player.weather];
+        var mount = MOUNTS[player.mount];
+        var loc = LOCATIONS[player.location];
+        
+        // 商旅相关关键词
+        if (text.indexOf("道路") !== -1 || text.indexOf("路况") !== -1 || text.indexOf("路") !== -1) {
+            if (loc.nearby && loc.nearby.length > 0) {
+                var roadInfoList = [];
+                loc.nearby.forEach(function(city) {
+                    var key1 = player.location + "-" + city;
+                    var key2 = city + "-" + player.location;
+                    var roadInfo = player.roadIntel[key1] || player.roadIntel[key2];
+                    if (roadInfo && roadInfo.known) {
+                        var statusData = ROAD_STATUS[roadInfo.status] || ROAD_STATUS["崎岖"];
+                        roadInfoList.push(statusData.icon + city + "：" + roadInfo.status);
+                    } else {
+                        roadInfoList.push("❓" + city + "：尚未探明");
+                    }
+                });
+                log("【问答】" + player.location + "周边道路：" + roadInfoList.join(" | "), "item");
+            } else {
+                log("【问答】此地偏远，无相邻道路。", "system");
+            }
+            return;
+        }
+        
+        if (text.indexOf("治安") !== -1 || text.indexOf("治理") !== -1) {
+            var rulerInfo = FACTION_RULERS[loc.faction] || FACTION_RULERS["流浪"];
+            var rulerStyle = RULER_STYLES[rulerInfo.style];
+            log("【问答】" + rulerInfo.name + "治下：" + rulerStyle.icon + rulerStyle.desc, "item");
+            if (rulerStyle.tax > 0) {
+                log("商旅过路税约为货物价值的" + rulerStyle.tax + "%。", "system");
+            } else {
+                log("仁德之主，不收取过路税！", "success");
+            }
+            return;
+        }
+        
+        if (text.indexOf("物价") !== -1 || text.indexOf("贸易") !== -1 || text.indexOf("市场") !== -1) {
+            var hub = TRADE_HUBS[player.location];
+            if (hub) {
+                log("【问答】本地特产：" + GOODS[hub.specialty].desc + "【" + hub.specialty + "】", "item");
+                log("急需物资：" + GOODS[hub.demand].desc + "【" + hub.demand + "】", "item");
+            } else {
+                log("【问答】此地无正规市场，贸易困难。", "system");
+            }
+            return;
+        }
+        
+        var qa = {
+            "曹操": "曹操，字孟德，乱世之奸雄，治军严谨，商旅经过需缴纳少量过路税。",
+            "刘备": "刘备，字玄德，汉室宗亲，以仁义著称，治下免收过路税，夜间更有官军护送商旅。",
+            "孙权": "孙权，字仲谋，江东之主，治国有方，治安良好，商旅安全。",
+            "袁绍": "袁绍，四世三公，优柔寡断，治下平平，商旅正常往来。",
+            "袁术": "袁术，野心勃勃，贪婪成性，过路税颇重，商旅苦不堪言。",
+            "董卓": "董卓残暴不仁，烧杀抢掠，商旅视为畏途，非必要切勿前往！",
+            "自己": "您乃" + player.role + "，孑然一身，商旅四方。",
+            "这里": "此地乃" + player.location + "，" + loc.desc + "。道路为【" + (loc.road || "官道") + "】。",
+            "环境": loc.envDesc || loc.desc,
+            "天气": weather.icon + " " + weather.name + "，" + weather.desc + "。行军速度：" + Math.round(weather.speedMod * 100) + "%。",
+            "干粮": "您随身携带" + player.rations + "份干粮。干粮用于探索和城市间移动。",
+            "货物": "您的货物总价值约" + calculateGoodsValue() + "银两。",
+            "载重": "当前载重" + calculateCurrentLoad() + "，" + (player.mount ? MOUNTS[player.mount].name : "步行") + "载重上限" + (player.mount ? MOUNTS[player.mount].capacity : 10) + "。",
+            "护卫": "您有" + player.guard + "名护卫保护商队。",
+            "坐骑": "您使用【" + mount.name + "】，移动速度+" + Math.round((mount.speedMod - 1) * 100) + "%，载重" + mount.capacity + "。",
+            "日期": "现在是" + player.year + "年" + monthNames[player.month-1] + "月" + player.day + "日",
+            "时间": "现在是" + player.year + "年" + monthNames[player.month-1] + "月" + player.day + "日",
+            "今天": "今天是" + player.year + "年" + monthNames[player.month-1] + "月" + player.day + "日"
+        };
+        
+        for (var k in qa) {
+            if (text.indexOf(k) !== -1) { log("【问答】" + qa[k], "item"); return; }
+        }
+        log("此事...我亦不知。可问道路、治安、曹操、刘备、物价、干粮、货物、护卫等。", "system");
+    }
+    
+    function showStatus() {
+        var mount = MOUNTS[player.mount];
+        var currentLoad = calculateCurrentLoad();
+        var maxLoad = mount ? mount.capacity : 10;
+        var goodsValue = calculateGoodsValue();
+        
+        log("【商旅状态】", "important");
+        log("身份：" + player.role, "system");
+        log("武力：" + player.atk + "  智力：" + player.int, "normal");
+        log("生命：" + player.hp + "/" + player.maxHp, "normal");
+        log("🍙 干粮：" + player.rations + "份", "normal");
+        log("💰 银两：" + player.silver + "银", "normal");
+        log("📦 货物价值：" + goodsValue + "银", "normal");
+        log("🐴 交通工具：" + mount.name + "（载重" + maxLoad + "）", "item");
+        log("⚖️ 当前载重：" + currentLoad + "/" + maxLoad + " (" + Math.round(currentLoad/maxLoad*100) + "%)", "item");
+        log("🛡️ 商队护卫：" + player.guard + "人", "item");
+        log("🏠 已探索：" + player.discovered.length + "处", "item");
+        log("📅 日期：" + player.year + "年" + monthNames[player.month-1] + "月" + player.day + "日", "system");
+    }
+    
+    // ==================== 随机事件 ====================
+    function randomEvent() {
+        var events = [
+            { text: "遇到流民请求施舍", action: "beggar" },
+            { text: "发现可疑足迹", action: "trace" },
+            { text: "商队路过", action: "merchant" },
+            { text: "遇到逃兵", action: "deserter" }
+        ];
+        
+        var r = events[Math.floor(Math.random() * events.length)];
+        
+        if (r.action === "beggar") {
+            if (player.rations >= 5) {
+                player.rations -= 5;
+                player.fame += 3;
+                log("【事件】施舍流民5份干粮，名望+3", "success");
+            } else if (player.silver >= 5) {
+                player.silver -= 5;
+                player.fame += 2;
+                log("【事件】施舍流民5银两，名望+2", "success");
+            } else {
+                log("【事件】遇到流民请求施舍，但您囊中羞涩...", "system");
+            }
+        } else if (r.action === "trace") {
+            log("【事件】前方可能有贼人，小心！", "system");
+        } else if (r.action === "deserter") {
+            log("【事件】遇到逃兵，您策马扬鞭，逃兵望尘莫及...", "system");
+        }
+    }
+    
+    // ==================== 任务系统 ====================
+    function assignQuest() {
+        player.quest = { title: "初入阵营", desc: "了解当前局势", target: "init" };
+    }
+    
+    function checkQuest(type) {
+        if (type === "city" && player.quest && player.quest.target === "init") {
+            player.quest = { title: "探索四方", desc: "探索至少3座城池", target: "explore3" };
+            log("【任务更新】" + player.quest.title, "important");
+        }
+        
+        if (player.quest && player.quest.target === "explore3") {
+            if (player.discovered.length >= 3) {
+                player.fame += 20;
+                log("★ 任务完成！名望+20", "success");
+                player.quest = { title: "积累名望", desc: "名望达到50", target: "fame50" };
+            }
+        }
+    }
+    
+    // ==================== 时间系统 ====================
+    function advanceTime(days) {
+        days = days || 1;
+        for (var i = 0; i < days; i++) {
+            player.day++;
+            
+            var daysInMonth = [29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30];
+            var maxDay = daysInMonth[player.month - 1];
+            
+            if (player.day > maxDay) {
+                player.day = 1;
+                player.month++;
+                
+                if (player.month > 12) {
+                    player.month = 1;
+                    player.year++;
+                    log("【系统】公元" + player.year + "年到了！", "system");
+                }
+                
+                if (Math.random() > 0.5) {
+                    updateWeather();
+                }
+            }
+        }
+    }
+    </script>
+</body>
+</html>
