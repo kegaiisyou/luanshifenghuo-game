@@ -105,6 +105,88 @@
         
         /* 坐骑显示 */
         .mount-info { color: #b8a0d0; font-size: 0.7rem; }
+        
+        /* 移动动画提示 */
+        .travel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10, 10, 20, 0.85);
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .travel-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .travel-animation {
+            text-align: center;
+            animation: travelPulse 1.5s ease-in-out infinite;
+        }
+        .travel-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: iconBounce 1s ease-in-out infinite;
+        }
+        .travel-text {
+            color: #d4af37;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+            animation: textGlow 1s ease-in-out infinite alternate;
+        }
+        .travel-sub {
+            color: #8a7a6a;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
+        @keyframes travelPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes textGlow {
+            0% { text-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+            100% { text-shadow: 0 0 30px rgba(212, 175, 55, 0.8); }
+        }
+        
+        /* 成功到达动画 */
+        .arrival-flash {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a2510, #2a3a20);
+            border: 2px solid #9ab87a;
+            border-radius: 12px;
+            padding: 30px 50px;
+            text-align: center;
+            z-index: 10000;
+            opacity: 0;
+            pointer-events: none;
+            animation: arrivalAnim 2s ease-out forwards;
+        }
+        .arrival-icon { font-size: 3rem; margin-bottom: 10px; }
+        .arrival-text { color: #9ab87a; font-size: 1.3rem; font-weight: bold; }
+        
+        @keyframes arrivalAnim {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            25% { transform: translate(-50%, -50%) scale(1); }
+            75% { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+        }
     </style>
 </head>
 <body>
@@ -154,7 +236,7 @@
         
         <!-- 快捷按钮 -->
         <div class="quick-btns">
-            <button class="qbtn" data-action="openDestination">📍 前往</button>
+            <button class="qbtn" data-action="openDestination">📍 移动</button>
             <button class="qbtn" data-action="explore">🔍 探索</button>
             <button class="qbtn" data-action="askInfo">📢 打探</button>
             <button class="qbtn" data-action="showEnvironment">🏞️ 环境</button>
@@ -212,6 +294,15 @@
         <div class="env-desc" id="envDesc"></div>
         <div id="envContent"></div>
         <button class="panel-close" data-action="closeEnvironment">返回游戏</button>
+    </div>
+    
+    <!-- 移动动画覆盖层 -->
+    <div id="travelOverlay" class="travel-overlay">
+        <div class="travel-animation">
+            <div class="travel-icon" id="travelIcon">🚶</div>
+            <div class="travel-text" id="travelText">正在前往...</div>
+            <div class="travel-sub" id="travelSub">请稍候</div>
+        </div>
     </div>
     
     <!-- 战斗面板 -->
@@ -1173,7 +1264,6 @@
         
         // 商旅路线
         var nearbyCities = currentLoc.nearby || [];
-        console.log("当前位置:", player.location, "相邻城市:", nearbyCities);
         if (nearbyCities.length > 0) {
             html += '<div class="dest-section"><div class="dest-section-title">🚗 商旅路线</div>';
             nearbyCities.forEach(function(c) {
@@ -1274,32 +1364,59 @@
         var currentLoc = LOCATIONS[player.location];
         var placeData = currentLoc.places[place];
         var placeType = placeData.type;
-        player.place = place;
         
-        log("── " + player.location + " · " + place + " ──", "success");
-        log(placeData.desc, "normal");
+        // 先记录要进入的地点
+        var targetPlace = place;
         
-        // 根据地点类型显示不同功能
-        if (placeType === "镖局") {
-            showBiaojuDialog();
-        } else if (placeType === "坊市" || placeType === "市集" || placeType === "渡口" || placeType === "大集") {
-            showMarketDialog();
-        } else if (placeType === "客栈" || placeType === "驿站" || placeType === "大客栈") {
-            log("可在客栈打探消息，或休息恢复体力。", "item");
-        } else if (placeType === "茶馆") {
-            log("在此歇脚喝茶，与人闲聊可获取情报。", "item");
-        } else if (placeType === "庙会") {
-            log("庙会热闹非凡，或有商机可寻。", "item");
-        } else if (placeType === "官府") {
-            log("官府重地，不可随意逗留。", "system");
-        } else if (placeType === "兵营" || placeType === "军营" || placeType === "军事") {
-            log("军事重地，商旅止步。", "system");
-        } else if (placeType === "农家" || placeType === "田野" || placeType === "农田" || placeType === "田地") {
-            log("田园风光，偶有农产可交易。", "item");
-        }
+        // 显示移动动画
+        showTravelAnimation(place, true);
         
-        closeDestination();
-        updateUI();
+        // 隐藏目的地面板
+        document.getElementById('destinationPanel').style.display = 'none';
+        document.getElementById('mainPanel').style.display = 'none';
+        
+        // 延迟执行进入地点的实际逻辑
+        setTimeout(function() {
+            player.place = targetPlace;
+            
+            // 隐藏移动动画
+            hideTravelAnimation();
+            
+            // 显示到达动画
+            var placeIcon = '🏘️';
+            if (placeType === "镖局") placeIcon = '🛡️';
+            else if (placeType === "坊市" || placeType === "市集" || placeType === "渡口" || placeType === "大集") placeIcon = '🏪';
+            else if (placeType === "客栈" || placeType === "驿站" || placeType === "大客栈") placeIcon = '🏨';
+            else if (placeType === "茶馆") placeIcon = '🍵';
+            else if (placeType === "庙会") placeIcon = '🎪';
+            
+            showArrivalAnimation(targetPlace, placeIcon);
+            
+            log("── " + player.location + " · " + targetPlace + " ──", "success");
+            log(placeData.desc, "normal");
+            
+            // 根据地点类型显示不同功能
+            if (placeType === "镖局") {
+                showBiaojuDialog();
+            } else if (placeType === "坊市" || placeType === "市集" || placeType === "渡口" || placeType === "大集") {
+                showMarketDialog();
+            } else if (placeType === "客栈" || placeType === "驿站" || placeType === "大客栈") {
+                log("可在客栈打探消息，或休息恢复体力。", "item");
+            } else if (placeType === "茶馆") {
+                log("在此歇脚喝茶，与人闲聊可获取情报。", "item");
+            } else if (placeType === "庙会") {
+                log("庙会热闹非凡，或有商机可寻。", "item");
+            } else if (placeType === "官府") {
+                log("官府重地，不可随意逗留。", "system");
+            } else if (placeType === "兵营" || placeType === "军营" || placeType === "军事") {
+                log("军事重地，商旅止步。", "system");
+            } else if (placeType === "农家" || placeType === "田野" || placeType === "农田" || placeType === "田地") {
+                log("田园风光，偶有农产可交易。", "item");
+            }
+            
+            closeDestination();
+            updateUI();
+        }, 800);
     }
     
     // 镖局对话 - 雇佣护卫
@@ -1354,19 +1471,20 @@
         if (!hub) {
             log("此地暂无正规市场，贸易困难。", "system");
             log("可前往徐州、下邳、寿春等大城进行贸易。", "item");
-            return;
+            return false;
         }
         
         var specialty = GOODS[hub.specialty];
         var demand = GOODS[hub.demand];
         var goodsValue = calculateGoodsValue();
         var currentLoad = calculateCurrentLoad();
-        var mount = MOUNTS[player.mount];
+        var mount = player.mount ? MOUNTS[player.mount] : null;
         var maxLoad = mount ? mount.capacity : 10;
+        var mountName = mount ? mount.name : "步行";
         
         log("📢 市集行情：", "item");
-        log("★ 特产：【" + hub.specialty + "】" + specialty.desc, "success");
-        log("☆ 急需：【" + hub.demand + "】" + demand.desc, "combat");
+        log("★ 特产：【" + hub.specialty + "】" + (specialty ? specialty.desc : ""), "success");
+        log("☆ 急需：【" + hub.demand + "】" + (demand ? demand.desc : ""), "combat");
         
         log("", "normal");
         log("📦 我的货物：", "item");
@@ -1386,7 +1504,7 @@
         }
         
         log("", "normal");
-        log("📊 载重：" + currentLoad + "/" + maxLoad + "（" + player.mount ? MOUNTS[player.mount].name : "步行" + "）", "item");
+        log("📊 载重：" + currentLoad + "/" + maxLoad + "（" + mountName + "）", "item");
         log("💰 银两：" + player.silver + "银", "item");
         
         log("", "normal");
@@ -1408,7 +1526,9 @@
             }
         }
         log("", "normal");
-        log("💡 输入「买" + (player.mount ? "马" : "马") + "」即可购买", "system");
+        log("💡 输入「买马」即可购买", "system");
+        
+        return true;
     }
     
     // 处理购买交通工具
@@ -1569,111 +1689,167 @@
         }
     }
     
+    // 显示移动动画
+    function showTravelAnimation(city, isPlace) {
+        var overlay = document.getElementById('travelOverlay');
+        var icon = document.getElementById('travelIcon');
+        var text = document.getElementById('travelText');
+        var sub = document.getElementById('travelSub');
+        
+        if (isPlace) {
+            icon.textContent = '🚶';
+            text.textContent = '正在前往「' + city + '」';
+            sub.textContent = '请稍候...';
+        } else {
+            var mount = MOUNTS[player.mount];
+            var iconChar = mount ? (player.mount === '快船' ? '⛵' : '🐎') : '🚶';
+            icon.textContent = iconChar;
+            text.textContent = '正在前往「' + city + '」';
+            sub.textContent = '收拾行装，商旅启程...';
+        }
+        
+        overlay.classList.add('active');
+    }
+    
+    // 隐藏移动动画
+    function hideTravelAnimation() {
+        var overlay = document.getElementById('travelOverlay');
+        overlay.classList.remove('active');
+    }
+    
+    // 显示到达动画
+    function showArrivalAnimation(text, icon) {
+        // 移除已有的动画
+        var existing = document.querySelector('.arrival-flash');
+        if (existing) existing.remove();
+        
+        var flash = document.createElement('div');
+        flash.className = 'arrival-flash';
+        flash.innerHTML = '<div class="arrival-icon">' + icon + '</div><div class="arrival-text">' + text + '</div>';
+        document.body.appendChild(flash);
+        
+        // 动画结束后移除
+        setTimeout(function() {
+            if (flash.parentNode) flash.remove();
+        }, 2000);
+    }
+    
     function travelTo(city) {
-        var days = calculateTravelTime(player.location, city);
-        var rationsCost = calculateRationsCost(days);
-        var toll = calculateToll(city);
-        var totalCost = rationsCost;
+        // 立即显示移动动画
+        showTravelAnimation(city, false);
         
-        if (rationsCost > player.rations) {
-            log("干粮不足！需要" + rationsCost + "份干粮，行军" + days + "天。", "combat");
-            return;
-        }
+        // 隐藏目的地面板
+        document.getElementById('destinationPanel').style.display = 'none';
+        document.getElementById('mainPanel').style.display = 'none';
         
-        // 消耗干粮
-        player.rations -= rationsCost;
-        
-        var weather = WEATHER_TYPES[player.weather];
-        var mountStr = player.mount ? MOUNTS[player.mount].name : "步行";
-        var destLoc = LOCATIONS[city];
-        var rulerInfo = FACTION_RULERS[destLoc.faction] || FACTION_RULERS["流浪"];
-        var rulerStyle = RULER_STYLES[rulerInfo.style];
-        
-        log("═══════════════════", "system");
-        log("🚗 商旅启程 → 「" + city + "」", "important");
-        log("═══════════════════", "system");
-        log("📅 行军" + days + "天 | " + weather.icon + weather.name + " | " + mountStr, "system");
-        log("🍙 干粮消耗：" + rationsCost + "份", "item");
-        
-        // 获取道路情报
-        var roadKey1 = player.location + "-" + city;
-        var roadKey2 = city + "-" + player.location;
-        var roadInfo = player.roadIntel[roadKey1] || player.roadIntel[roadKey2];
-        var roadStatus = roadInfo ? roadInfo.status : "崎岖";
-        var statusData = ROAD_STATUS[roadStatus] || ROAD_STATUS["崎岖"];
-        
-        log("🛤️ 道路状况：" + statusData.icon + roadStatus, "item");
-        
-        // 仁德统治者可能有护送
-        if (rulerStyle.escort) {
-            log("💚 " + rulerInfo.name + "派官军沿途护送，一路平安！", "success");
-        }
-        
-        // 支付过路费
-        if (toll > 0) {
-            player.silver -= toll;
-            log("👮 「" + rulerInfo.name + "」收取过路费：" + toll + "银两 💸", "combat");
-        } else if (rulerStyle.tax === 0) {
-            log("💚 " + rulerInfo.name + "治下免收过路费！", "success");
-        }
-        
-        // 商旅事件
-        var goodsValue = calculateGoodsValue();
-        var hasGoods = goodsValue > 0;
-        
-        // 根据道路状态和统治者性格决定事件
-        if (rulerStyle.danger && Math.random() < 0.6) {
-            // 残暴统治区 - 抢劫风险
-            handleBrutalAreaEvent();
-        } else if (hasGoods && roadStatus === "危险") {
-            // 有货物 + 危险道路 - 盗匪风险
-            handleBanditEvent();
-        } else if (hasGoods && Math.random() < 0.3) {
-            // 有货物可能遇到商队或税收检查
-            handleTradeEvent();
-        } else if (Math.random() < 0.4) {
-            // 正常旅途事件
-            handleNormalTravelEvent();
-        }
-        
-        // 到达城市
-        player.location = city;
-        player.place = null;
-        if (player.discovered.indexOf(city) === -1) {
-            player.discovered.push(city);
-        }
-        
-        log("═══════════════════", "system");
-        log("🏛️ 抵达「" + city + "」", "success");
-        log("═══════════════════", "system");
-        log(LOCATIONS[city].desc, "normal");
-        
-        // 显示贸易情报
-        if (TRADE_HUBS[city]) {
-            var hub = TRADE_HUBS[city];
-            var specialty = GOODS[hub.specialty];
-            log("📢 市集行情：本城特产【" + hub.specialty + "】，需求【" + hub.demand + "】", "item");
-        }
-        
-        // 显示NPC对话
-        var loc = LOCATIONS[city];
-        if (loc.npcs && loc.npcs.length > 0) {
-            var npc = loc.npcs[Math.floor(Math.random() * loc.npcs.length)];
-            log("「" + npc.name + "」道：" + npc.text, "item");
-        }
-        
-        if (loc.yells && loc.yells.length > 0 && Math.random() > 0.5) {
-            var yell = loc.yells[Math.floor(Math.random() * loc.yells.length)];
-            log("远处传来吆喝声：" + yell, "item");
-        }
-        
-        // 更新道路情报
-        updateRoadIntel(city);
-        
-        advanceTime(days);
-        checkQuest("city");
-        closeDestination();
-        updateUI();
+        // 延迟执行实际移动
+        setTimeout(function() {
+            var days = calculateTravelTime(player.location, city);
+            var rationsCost = calculateRationsCost(days);
+            var toll = calculateToll(city);
+            
+            if (rationsCost > player.rations) {
+                log("干粮不足！需要" + rationsCost + "份干粮，行军" + days + "天。", "combat");
+                document.getElementById('destContent').style.display = 'block';
+                return;
+            }
+            
+            // 消耗干粮
+            player.rations -= rationsCost;
+            
+            var weather = WEATHER_TYPES[player.weather];
+            var mountStr = player.mount ? MOUNTS[player.mount].name : "步行";
+            var destLoc = LOCATIONS[city];
+            var rulerInfo = FACTION_RULERS[destLoc.faction] || FACTION_RULERS["流浪"];
+            var rulerStyle = RULER_STYLES[rulerInfo.style];
+            
+            log("═══════════════════", "system");
+            log("🚗 商旅启程 → 「" + city + "」", "important");
+            log("═══════════════════", "system");
+            log("📅 行军" + days + "天 | " + weather.icon + weather.name + " | " + mountStr, "system");
+            log("🍙 干粮消耗：" + rationsCost + "份", "item");
+            
+            // 获取道路情报
+            var roadKey1 = player.location + "-" + city;
+            var roadKey2 = city + "-" + player.location;
+            var roadInfo = player.roadIntel[roadKey1] || player.roadIntel[roadKey2];
+            var roadStatus = roadInfo ? roadInfo.status : "崎岖";
+            var statusData = ROAD_STATUS[roadStatus] || ROAD_STATUS["崎岖"];
+            
+            log("🛤️ 道路状况：" + statusData.icon + roadStatus, "item");
+            
+            // 仁德统治者可能有护送
+            if (rulerStyle.escort) {
+                log("💚 " + rulerInfo.name + "派官军沿途护送，一路平安！", "success");
+            }
+            
+            // 支付过路费
+            if (toll > 0) {
+                player.silver -= toll;
+                log("👮 「" + rulerInfo.name + "」收取过路费：" + toll + "银两 💸", "combat");
+            } else if (rulerStyle.tax === 0) {
+                log("💚 " + rulerInfo.name + "治下免收过路费！", "success");
+            }
+            
+            // 商旅事件
+            var goodsValue = calculateGoodsValue();
+            var hasGoods = goodsValue > 0;
+            
+            // 根据道路状态和统治者性格决定事件
+            if (rulerStyle.danger && Math.random() < 0.6) {
+                handleBrutalAreaEvent();
+            } else if (hasGoods && roadStatus === "危险") {
+                handleBanditEvent();
+            } else if (hasGoods && Math.random() < 0.3) {
+                handleTradeEvent();
+            } else if (Math.random() < 0.4) {
+                handleNormalTravelEvent();
+            }
+            
+            // 到达城市
+            player.location = city;
+            player.place = null;
+            if (player.discovered.indexOf(city) === -1) {
+                player.discovered.push(city);
+            }
+            
+            log("═══════════════════", "system");
+            log("🏛️ 抵达「" + city + "」", "success");
+            log("═══════════════════", "system");
+            log(LOCATIONS[city].desc, "normal");
+            
+            // 显示贸易情报
+            if (TRADE_HUBS[city]) {
+                var hub = TRADE_HUBS[city];
+                log("📢 市集行情：本城特产【" + hub.specialty + "】，需求【" + hub.demand + "】", "item");
+            }
+            
+            // 显示NPC对话
+            var loc = LOCATIONS[city];
+            if (loc.npcs && loc.npcs.length > 0) {
+                var npc = loc.npcs[Math.floor(Math.random() * loc.npcs.length)];
+                log("「" + npc.name + "」道：" + npc.text, "item");
+            }
+            
+            if (loc.yells && loc.yells.length > 0 && Math.random() > 0.5) {
+                var yell = loc.yells[Math.floor(Math.random() * loc.yells.length)];
+                log("远处传来吆喝声：" + yell, "item");
+            }
+            
+            // 更新道路情报
+            updateRoadIntel(city);
+            
+            // 隐藏移动动画
+            hideTravelAnimation();
+            
+            // 显示到达动画
+            showArrivalAnimation('抵达「' + city + '」', '🏛️');
+            
+            advanceTime(days);
+            checkQuest("city");
+            closeDestination();
+            updateUI();
+        }, 1500);
     }
     
     // 计算货物总价值
